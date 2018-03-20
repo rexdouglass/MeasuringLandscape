@@ -1,0 +1,118 @@
+---
+title: "03 Fuzzy Matcher Stage 1 (Locality Sensitive Hashing) "
+author: "Rex W. Douglass and Kristen Harkness"
+date: "March 9, 2018"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+editor_options: 
+  chunk_output_type: inline
+---
+<style>
+    body .main-container {
+        max-width: 100%;
+    }
+</style>
+
+# Fuzzy Matcher Stage 1
+
+The fuzzy matcher predicts the likelihood that two toponyms are the same place even though their spellings might be different. It has two stages.
+
+This file develops Stage 1 of the fuzzy toponym matcher. Its job is to screen out the vast majority of suggestions that are too dissimilar to ever be a plausible match. It will have a high false positive rate, which can then be further refined in stage 2.
+
+
+```{r , results='hide', message=FALSE, warning=FALSE}
+rm(list=ls()); gc()
+library(MeasuringLandscape)
+
+#devtools::load_all()
+
+dir_figures <- glue::glue(here::here(), "/paper/figures/")
+
+knitr::opts_knit$set(progress = TRUE, verbose = TRUE)
+knitr::opts_chunk$set(fig.width='100%',  warning=FALSE, message=FALSE, cache=TRUE)
+options(width = 160)
+
+```
+
+# Load Hand Labeled Place Matches
+
+
+```{r}
+
+#Load Hand Labeled Examples
+handlabeled <- data.table::fread(system.file("extdata",
+                                 "event_flatfile_matches_for_hand_labeling - event_flatfile_matches_for_hand_labeling.csv",
+                                 package = "MeasuringLandscape"), data.table=T) %>% distinct() 
+dim(handlabeled)
+
+# Remove exact matches 
+# Rewrote  with foreach to run in parallel on windows, but it's still relatively slow code with 8 cores.
+handlabeled$stemmed_a <- MeasuringLandscape:::strip_postfixes(to_be_striped=handlabeled$name_cleaner_a)[[1]]
+handlabeled$stemmed_b <- MeasuringLandscape:::strip_postfixes(to_be_striped=handlabeled$name_cleaner_b)[[1]]
+
+handlabeled_unique <- subset(handlabeled, stemmed_a!=stemmed_b) # very important we're dropping any with identical stems for evaluation
+table(handlabeled_unique$rex_match) #1090 matches, 16978 nonmatches
+
+#Stem them
+handlabeled_unique$stemmed_a <- MeasuringLandscape:::strip_postfixes(handlabeled_unique$name_cleaner_a)[[1]]
+handlabeled_unique$stemmed_b <- MeasuringLandscape:::strip_postfixes(handlabeled_unique$name_cleaner_b)[[1]]
+handlabeled_unique$stemmed_ab <- sapply(lapply(strsplit(paste(handlabeled_unique$stemmed_a,
+                                                              handlabeled_unique$stemmed_b, sep="_"),
+                                                        "_"),
+                                               sort),
+                                        paste,
+                                        collapse="_")
+
+
+dim(handlabeled)
+handlabeled$a <- handlabeled$name_cleaner_a
+handlabeled$b <- handlabeled$name_cleaner_b
+handlabeled[,ab:=paste(a,b,sep="_")]
+handlabeled[,ba:=paste(b,a,sep="_")]
+
+stemmed_ab <- unique(c(handlabeled$stemmed_a, handlabeled$stemmed_b)) ; length(stemmed_ab) #where ab is the unique toponym strings found in the data
+
+```
+
+Grid search optimal parameters for locality sensitive hashing.
+
+Settling on 20 bands, 5 rows, and qgram of 1 letter
+
+```{r}
+
+fromsrcatch=F
+if(fromsrcatch){
+  grid_search_lhs <- list()
+  for(q in c(2,5,10,20,25,50)){
+    print(q)
+    grid_search_lhs[[as.character(q)]] <- lhs_textreuse(minhash_count=100,  bands=q) #good trade off
+    print(grid_search_lhs[[as.character(q)]])
+  }
+  grid_search_lhs_dt <- rbindlist(grid_search_lhs)
+  
+  saveRDS(grid_search_lhs_dt,
+          glue::glue(getwd(), "/../inst/extdata/grid_search_lhs_dt.Rds"))
+}
+
+grid_search_lhs_dt <- readRDS(system.file("extdata", "grid_search_lhs_dt.Rds", package = "MeasuringLandscape"))
+
+```
+
+There's a big discontinuity between 50 bands and 25, and then diminishing returns with increasingly higher false negative rates thereafter. Choosing 25 as a compromise between low false negative rate and fewer suggestions per case. (Appendix Figure 4)
+
+```{r}
+
+p_lhs_gridsearch <- ggplot(grid_search_lhs_dt, aes(x=false_negative,y=suggestions_per, label=bands)) + geom_label() + ggtitle("")
+p_lhs_gridsearch
+
+ggsave(
+  filename = glue::glue(dir_figures, "p_lhs_gridsearch.pdf"),
+  plot = p_lhs_gridsearch,
+  width = 5.5,
+  #height = 8,
+  device = cairo_pdf #have to use cairo to correctly embed the fonts
+)
+
+```
