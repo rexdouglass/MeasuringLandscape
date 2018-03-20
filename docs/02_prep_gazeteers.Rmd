@@ -404,7 +404,7 @@ temp <- flatfiles_sf_roi %>%
   arrange(longitude) %>%
   mutate(longitude_l1 = lag(longitude, 1)) %>%
   mutate(longitude_fd = round(longitude - longitude_l1, 4))
-d <- as.matrix(table(temp$longitude_fd, temp$source_dataset)) # ok so the most common difference between points is 0.016. That's about 1.776 km
+d <- as.matrix(table(temp$longitude_fd, temp$source_dataset)) # ok so the most common difference between points is 0.016. That's about 1.776 km 
 
 ```
 
