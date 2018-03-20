@@ -25,7 +25,8 @@ Replication Code and Analysis
 All of the files necessary for reproducing our analysis are including in a self contained R package "MeasuringLandscape." You can install the package MeasuringLandscapeCivilWar from github with:
 
 ``` r
-# install.packages("devtools")
+if(!require(devtools)) install.packages("devtools")
+devtools::install_github("tidyverse/ggplot2") # geom_sf requires ggplot installed off of the dev server
 devtools::install_github("rexdouglass/MeasuringLandscape")
 ```
 
