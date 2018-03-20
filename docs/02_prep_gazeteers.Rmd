@@ -16,7 +16,7 @@ editor_options:
 </style>
 
 Cleans and combines a large number of gazetteers of place names for looking up locations by name and retrieving their coordinates.
-
+ 
 ```{r, results='hide', message=FALSE, warning=FALSE}
 rm(list=ls()); gc()
 # Hiding output and warnings
@@ -348,6 +348,7 @@ p_notpoints
 # Visually Comparing Spatial Precision of each Sources
 
 (Appendix Figure 2 on Longitude)
+
 
 ```{R}
 

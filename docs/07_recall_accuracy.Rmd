@@ -79,7 +79,7 @@ georef_all_dt <- subset(georef_all_dt,
 
 table(georef_all_dt$distance_km==0) #These are identical matches, same event on the left hand and right hand sides
 
-```
+``` 
 
 # Calculate Recall Rate and Distance for Ensembles
 
@@ -224,8 +224,6 @@ recall_accuracy <- rbindlist(list(
   georef_all_dt_bygeometry_type %>% mutate(label=geometry_type) %>% mutate(Type="Geometry Type")
 ),fill=T) %>% mutate(recall_rate=source_dataset_count/10469)
 
-#p_load(DT)
-DT::datatable(recall_accuracy)
 
 ```
 

@@ -302,7 +302,7 @@ ggsave(
   plot = p_bias_dv, width = 9, height = 6,
   device = cairo_pdf #have to use cairo to correctly embed the fonts
 
-)
+) 
 
 ```
 

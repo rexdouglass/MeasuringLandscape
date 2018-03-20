@@ -21,7 +21,7 @@ The fuzzy matcher predicts the likelihood that two toponyms are the same place e
 
 This file develops Stage 1 of the fuzzy toponym matcher. Its job is to screen out the vast majority of suggestions that are too dissimilar to ever be a plausible match. It will have a high false positive rate, which can then be further refined in stage 2.
 
-
+ 
 ```{r , results='hide', message=FALSE, warning=FALSE}
 rm(list=ls()); gc()
 library(MeasuringLandscape)

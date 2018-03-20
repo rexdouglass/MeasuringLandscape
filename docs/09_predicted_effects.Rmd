@@ -159,7 +159,7 @@ ggsave(
   filename = glue::glue(dir_figures, "rf_mapcoordinate_clean_missing.pdf"),
   plot = final_histogram, width = 10, height = 8
 )
-
+ 
 ```
 
 

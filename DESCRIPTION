@@ -14,7 +14,9 @@ Depends:
   ggplot2 (>= 2.2.1.9),
   magrittr,
   data.table,
-  tidyverse
+  tidyverse,
+  stringdist,
+  sf
 Imports:
   broom,
   car,
@@ -52,7 +54,6 @@ Imports:
   raster,
   re2r,
   rgdal,
-  sf,
   SnowballC,
   stringi,
   stringr,

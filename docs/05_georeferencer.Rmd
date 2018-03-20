@@ -123,7 +123,7 @@ events_sf$name_cleaner_postfix <- temp[[2]]
 ```
 
 There are `r length(unique(events_sf$name_cleaner_stem))` unique location stems in the events data.
-
+ 
 
 ```{r}
 #Unique stems
@@ -268,7 +268,7 @@ glue::glue(stemmed_ab_suggestions_events %>% nrow() , " string matches")
 # Screen pairs that are too dissimilar
 
 ```{r}
-ab_suggestions_events[,temp_q_cos:= stringsim(name_cleaner_a,name_cleaner_b,"cos", nthread=parallel::detectCores(),q=2),] #both fast and very good at sorting
+ab_suggestions_events[,temp_q_cos:= stringdist::stringsim(name_cleaner_a,name_cleaner_b,"cos", nthread=parallel::detectCores(),q=2),] #both fast and very good at sorting
 ab_suggestions_events <- ab_suggestions_events[temp_q_cos>.3] ; #dim(ab_suggestions_events) #less than .3 is never match
 glue::glue(ab_suggestions_events %>% nrow() , " string matches after removing those with too small a ngram2 cosine distance")
 
@@ -288,7 +288,7 @@ Next, we refine the remaining matches using additional string distance features 
 ab_suggestions_events$a <- ab_suggestions_events$stemmed_a
 ab_suggestions_events$b <- ab_suggestions_events$stemmed_b
 
-ab_suggestions_events_features <- toponym_add_features(ab_suggestions_events)
+ab_suggestions_events_features <- MeasuringLandscape:::toponym_add_features(ab_suggestions_events)
 
 vars_x_string <- c(
     "Jaro",
@@ -321,7 +321,7 @@ vars_x_string <- c(
     "dJaccard"
 ) 
 
-dpredict<-xgb.DMatrix(data= as.matrix(ab_suggestions_events_features[,vars_x_string, with=F]), missing = NA)
+dpredict<-xgboost::xgb.DMatrix(data= as.matrix(ab_suggestions_events_features[,vars_x_string, with=F]), missing = NA)
 
 #Step 4 Predict the likelihood that two strings are same
 ab_suggestions_events_features$toponym_xb_model_prediction <- predict( toponym_xb_model, dpredict )
@@ -349,9 +349,6 @@ ab_suggestions_directed <- ab_suggestions_directed[toponym_xb_model_prediction>.
 hist(ab_suggestions_directed$toponym_xb_model_prediction) #after subsetting
 
 
-#kable(ab_suggestions_directed[a=="gura"], "html") %>% kable_styling() %>% scroll_box(width = "1000px", height = "500px")
-
-DT::datatable(ab_suggestions_events[stemmed_a=="gura"])
 
 ```
 
