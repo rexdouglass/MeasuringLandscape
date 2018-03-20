@@ -15,7 +15,7 @@ This file described dependencies and potential troubleshooting tips.
 
 This paper was run using v1.0.0 of the MeasuringLandscape package. This release reflects the state of the code as of publication. It is the best chance at obtaining identical results as shown in print. Future releases will improve the presentation of the R-Notebooks and refactor the code to be more readable and reusable and may not generate exactly identical figures or messages. This version is archived so that even as the package improves over time, the analysis can be rerun against that specific version of the code.
 
-This package is highly dependent on specific package versions. Many packages updated their interfaces just over the course of writing this paper. These are the specific versions of packages used.
+This package is highly dependent on specific package versions. Many packages updated their interfaces just over the course of writing this paper. These are the specific versions of packages used. 
 
 ```{r}
 sessionInfo()
