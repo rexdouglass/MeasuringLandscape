@@ -26,28 +26,53 @@ sessionInfo()
 
 You may hit an error "`maximal number of DLLs reached..." This is set by an environmental variable in R. We've specifcied it in the included ".Renviron" file "R_MAX_NUM_DLLS = 614"" which should work unless your system has a hard fixed lower level or you specifcy it elsehwere.
 
+MeasuringLandscape depends on a number of other packages, some with their own complicated dependencies.
 
+First SF, which requires GDAL. Follow the [install instructions for SF](https://github.com/r-spatial/sf) which vary depending on your operating system.
+
+``` r
+install.packages('sf') #will either work or fail depending on when you have GDAL installed
+```
+
+Next we recomend all of tidyverse and tidymodels
+
+``` r
+install.packages("tidyverse")
+```
 
 
 In order to use specific fonts in the pdf, we use a system called Cairo. To use Cairo, must also install from https://www.cairographics.org/download/
 ```{r, eval=F}
+#configure: error: Cannot find cairo.h! Please install cairo (http://www.cairographics.org/) and/or set CAIRO_CFLAGS/LIBS correspondingly
+#sudo apt install r-cran-cairo
 install.packages('Cairo', dependencies=T)
 ```
 
 
 ```{r, eval=F}
-
-install.packages('devtools', dependencies=T)
+if(!require(devtools)) install.packages("devtools")
 devtools::install_github("dselivanov/LSHR") 
-devtools::install_github("tidyverse/ggplot2") # geom_sf requires ggplot installed off of the dev server
+```
 
-install.packages('knitr', dependencies=T)
-install.packages('tidyverse', dependencies=T)
+```{r}
 install.packages('data.table', dependencies=T)
+```
+
+```{r}
 install.packages('sf', dependencies=T)
-install.packages('caTools', dependencies=T)
+```
+
+```{r}
 install.packages('xgboost', dependencies=T)
-install.packages('pacman', dependencies=T)
+```
+
+```{r}
+install.packages('rgdal', dependencies=T)
+install.packages('raster', dependencies=T)
+```
+
+```{r}
+install.packages('caTools', dependencies=T)
 install.packages('units', dependencies=T)
 install.packages('date', dependencies=T)
 install.packages('car', dependencies=T)
@@ -81,15 +106,15 @@ install.packages('xtable', dependencies=T)
 install.packages('tools', dependencies=T)
 install.packages('lubridate', dependencies=T)
 install.packages('digest', dependencies=T)
-install.packages('rgdal', dependencies=T)
+
 install.packages('stringr', dependencies=T)
 install.packages('foreach', dependencies=T)
 install.packages('pinp', dependencies=T)
 install.packages('partykit', dependencies=T)
-install.packages('raster', dependencies=T)
 
+```
 
-
+```{r}
 # must download 
 
 devtools::document()

@@ -24,37 +24,8 @@ Replication Code and Analysis
 
 All of the files necessary for reproducing our analysis are including in a self contained R package "MeasuringLandscape." You can install the package MeasuringLandscapeCivilWar from github with the instructions below:
 
-MeasuringLandscape depends on a number of other packages, some with their own complicated dependencies.
-
-First SF, which requires GDAL. Follow the [install instructions for SF](https://github.com/r-spatial/sf) which vary depending on your operating system.
-
-``` r
-install.packages('sf') #will either work or fail depending on when you have GDAL installed
-#> Installing package into '/home/skynet2/R/x86_64-pc-linux-gnu-library/3.5'
-#> (as 'lib' is unspecified)
-#> Warning in install.packages("sf"): installation of package 'sf' had non-
-#> zero exit status
-```
-
-Next we recomend all of tidyverse and tidymodels
-
-``` r
-install.packages("tidyverse")
-#> Installing package into '/home/skynet2/R/x86_64-pc-linux-gnu-library/3.5'
-#> (as 'lib' is unspecified)
-install.packages("tidymodels")
-#> Installing package into '/home/skynet2/R/x86_64-pc-linux-gnu-library/3.5'
-#> (as 'lib' is unspecified)
-#> also installing the dependency 'tidyposterior'
-#> Warning in install.packages("tidymodels"): installation of package
-#> 'tidyposterior' had non-zero exit status
-#> Warning in install.packages("tidymodels"): installation of package
-#> 'tidymodels' had non-zero exit status
-```
-
 ``` r
 if(!require(devtools)) install.packages("devtools")
-devtools::install_github("tidyverse/ggplot2") # geom_sf requires ggplot installed off of the dev server
 devtools::install_github("rexdouglass/MeasuringLandscape")
 ```
 

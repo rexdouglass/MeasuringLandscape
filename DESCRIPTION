@@ -10,14 +10,14 @@ LazyData: true
 URL: https://github.com/rexdouglass/MeasuringLandscapeCivilWar
 BugReports: https://github.com/rexdouglass/MeasuringLandscapeCivilWar/issues
 Remotes: git::https://github.com/hadley/ggplot2.git
-Suggests:
-  ggplot2,
+Imports:
+  tidyverse,
   magrittr,
   data.table,
-  tidyverse,
   stringdist,
   sf,
-  broom,
+  broom
+Suggests:
   car,
   caTools,
   cowplot,
