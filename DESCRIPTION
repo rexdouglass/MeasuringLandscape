@@ -12,6 +12,7 @@ BugReports: https://github.com/rexdouglass/MeasuringLandscapeCivilWar/issues
 Remotes: git::https://github.com/hadley/ggplot2.git
 Depends:
 Imports:
+Suggests:
   ggplot2,
   magrittr,
   data.table,
@@ -62,5 +63,4 @@ Imports:
   xgboost,
   xtable,
   yaml
-Suggests:
 RoxygenNote: 6.0.1
