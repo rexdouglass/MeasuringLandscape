@@ -34,7 +34,20 @@ The Authors:
 
 ### Self Contained Package
 
-All of the files necessary for reproducing our analysis are including in a self contained R package "MeasuringLandscape." You can install the package MeasuringLandscapeCivilWar from github with:
+All of the files necessary for reproducing our analysis are including in a self contained R package "MeasuringLandscape." You can install the package MeasuringLandscapeCivilWar from github with the instructions below:
+
+MeasuringLandscape depends on a number of other packages, some with their own complicated dependencies.
+
+First SF, which requires GDAL. Follow the [install instructions for SF](https://github.com/r-spatial/sf) which vary depending on your operating system.
+```{r}
+install.packages('sf') #will either work or fail depending on when you have GDAL installed
+```
+
+Next we recomend all of tidyverse and tidymodels
+```{r}
+install.packages("tidyverse")
+install.packages("tidymodels")
+```
 
 ```{r gh-installation, eval = FALSE}
 if(!require(devtools)) install.packages("devtools")
