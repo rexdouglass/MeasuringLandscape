@@ -1,5 +1,5 @@
 
-#p_load(PRROC)
+#library(PRROC)
 area_under_pr_curve_metric <- function(preds,dtrain){
   preds <- 1/(1 + exp(-preds))
   labels <- getinfo(dtrain, "label")

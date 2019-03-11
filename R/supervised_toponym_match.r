@@ -2,8 +2,9 @@
 
 
 # This function takes in a dataframe with two strings, a and b, and then calculates string distance features on them.
-p_load(stringdist)
 toponym_add_distances_dt <- function(inputdata, fromscratch=F, nthread=parallel::detectCores()) {
+  library(stringdist)
+  
   inputdata <- as.data.table(inputdata)
 
   print("1 of 24")
@@ -122,7 +123,7 @@ toponym_add_corpus <- function(data, fromscratch=F) {
 
   # Load the ngram corpus and use it to look up things
   # Takes a while to load even with fst
-  p_load(fst)
+  library(fst)
 
   # Add feature counts from the gazzetter
   if (fromscratch) {

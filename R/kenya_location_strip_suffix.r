@@ -218,7 +218,7 @@ kenya_location_strip_suffix_train_classifier_rf <- function(token_features_vecto
   y_train[is.na(y_train)] <-0
   all_train <- cbind(x_train,y= as.factor(names(y_train)[ max.col(y_train) ]))
 
-  p_load(randomForestSRC)
+  library(randomForestSRC)
   rf <- rfsrc(y~.,data=all_train)
 
   data_predictions <- kenya_location_strip_suffix_generate_features(location_names)

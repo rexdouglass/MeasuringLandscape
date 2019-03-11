@@ -466,7 +466,7 @@ load_kenya_cadastral <- function(roi, fromscratch=F) {
   # https://stackoverflow.com/questions/42287164/install-udunits2-package-for-r3-3
   # install.packages('udunits2',configure.args='--with-udunits2-include=/usr/include/udunits2') #sudo yum install *units2*
   if (fromscratch) {
-    p_load(sf)
+    library(sf)
     kenya_cadastral_sf <- sf::st_read("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/kenya_cadastral.shp", crs = 4326) %>%
       filter(type %in% c("forest", "lake", "mountain", "Native Reserve", "reserve")) %>%
       common_cleaning() %>%

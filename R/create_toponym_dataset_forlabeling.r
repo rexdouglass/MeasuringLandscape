@@ -24,7 +24,7 @@ create_toponym_dataset_forlabeling <- function(){
   #
   
   #You know, centroids should be enough. If the river or polygon is much bigger than this then I shouldn't be merging it anyway
-  #p_load(RANN)
+  #library(RANN)
   coords_events <- st_coordinates(events_sf_utm)
   coords_events[!is.finite(coords_events)] <- NA
   condition_events <- !is.na(coords_events[,1]); table(condition_events)

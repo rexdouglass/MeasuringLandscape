@@ -1,7 +1,7 @@
 # I'm not masking zeros right now anyway, so the embedding might be using them as is. Maybe just go ahead and add a column to the fron for zeros.
 generate_sequences <- function(text, maxlength=20, mask=0, intcutoff=256) {
   text <- paste0("^", text, "$")
-  p_load(parallel)
+  library(parallel)
   text_df <- rbindlist(
     mclapply(
       text,

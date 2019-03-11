@@ -1,5 +1,4 @@
 
-library(pacman)
 
 # This function strips out a few special characters that kept appearing
 # I placed it here because it breaks Rstudio's parsing of rmarkdown files
@@ -86,7 +85,7 @@ to_polygon_df <- function(coords, ID=1, df=NULL) {
   return(sps_df)
 }
 
-p_load(aspace)
+library(aspace)
 to_sde <- function(coords, id=1) {
   # taken entirely from aspace::calc_sde
   points <- coords

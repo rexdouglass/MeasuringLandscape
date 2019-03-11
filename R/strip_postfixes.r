@@ -12,7 +12,7 @@ strip_postfixes <- function(to_be_striped,
                               "lari", "matara"
                             ),
                             verbose=F) {
-  #p_load(re2r)
+  #library(re2r)
   # to_be_striped[is.na(to_be_striped)] <- ""
 
   # length(post_fix_combined) #160,052
@@ -25,7 +25,7 @@ strip_postfixes <- function(to_be_striped,
 
   #condition <- sapply(postfix_possible, function(q) sum(endsWith(to_be_strip_unique, suffix = q)))
   
-  #p_load(doSNOW)
+  #library(doSNOW)
   check_any_ending <- function(q){
     return(
       sapply(q,

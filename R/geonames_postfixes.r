@@ -1,9 +1,3 @@
-# library(pacman)
-# p_load(dplyr)
-# p_load(tidytext)
-# p_load(janeaustenr)
-# p_load(data.table)
-
 # geonames_postfixes(fromscratch=T)
 
 # This function generates a list of toponym postfixes that appear globally a certain number of times

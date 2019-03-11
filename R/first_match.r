@@ -68,7 +68,7 @@ firstmismatch <- function(a, b, verbose=T) {
 
 # Quick function to count the number of characters of overlap up front only
 # b=c("murinduko hill forest","murinduko hill","forest murinduko settlement scheme")
-# p_load(re2r)
+# library(re2r)
 # library(devtools)
 # install_github("qinwf/re2r", build_vignettes = T)
 # library(re2r)

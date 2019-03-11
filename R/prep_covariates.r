@@ -4,16 +4,16 @@
 # This function loads (or creates extracts) of a number of geospatial files. It saves them as a list and also returns them as a list
 #
 prep_covariates <- function(roi, fromscratch=F) {
-  # p_load(rasterVis)
-  # p_load(ggplot2)
-  # p_load(rgdal)
-  # p_load(raster)
-  # p_load("rgdal") # requires sp, will use proj.4 if installed
-  # p_load("maptools")
-  # p_load("ggplot2")
-  # p_load("plyr")
-  # p_load(raster)
-  # p_load(glue)
+  # library(rasterVis)
+  # library(ggplot2)
+  # library(rgdal)
+  # library(raster)
+  # library("rgdal") # requires sp, will use proj.4 if installed
+  # library("maptools")
+  # library("ggplot2")
+  # library("plyr")
+  # library(raster)
+  # library(glue)
 
   # Not in the paper
   # District

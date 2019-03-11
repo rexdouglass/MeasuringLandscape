@@ -1,4 +1,3 @@
-library(pacman)
 
 kenya_location_strip_suffix_generate_annotations <- function(location_names, save=F){
 
@@ -25,8 +24,8 @@ kenya_location_strip_suffix_create_data_for_labeling <-
     init_spaCy(vector_flag = F)
     print("Generating Annotations")
     annotations <- run_annotators(unique(location_names),as_strings = TRUE, doc_id_offset=0)
-    library(keras)
-    p_load(ptw)
+    #library(keras)
+    library(ptw)
     require(utils)
     #Read Training Data
 

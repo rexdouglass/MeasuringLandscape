@@ -163,7 +163,7 @@ if (fromscratch) {
   # flatfiles[source_dataset=="livestock" & name_cleaner %in% temp,livestock_kill:=T,] #Livestock doesn't have spaces unforutnately
   # flatfiles <- flatfiles[livestock_kill==F,]
 
-  #p_load(stringr)
+  #library(stringr)
   flatfiles_sf_roi <- flatfiles %>%
     # mutate_all(funs(stri_enc_toascii)) %>% #rbindlist tries to convert to factors
     # mutate(name = strsplit(names, ";| see | SEE | check if same as ")) %>%
@@ -182,7 +182,7 @@ if (fromscratch) {
   table(flatfiles_sf_roi$timeperiod)
 
   # Fix geospatial stuff
-  # p_load(feather)
+  # library(feather)
   # condition <- st_is_valid(flatfiles_sf_roi$geometry) ; table(condition) # takes a long while
   # flatfiles_sf_roi$geometry[!condition] <- st_make_valid(flatfiles_sf_roi$geometry[!condition])
   flatfiles_sf_roi$geometry_dimensions <- sapply(flatfiles_sf_roi$geometry, FUN = function(x) st_dimension(x)) # takes a while

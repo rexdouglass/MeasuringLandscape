@@ -1,15 +1,15 @@
 # This function takes in a vector of strings and ids, and returns a ngram matrix with the request number of grams and skipgrams
 
-library(pacman)
-p_load(dissUtils)
-p_load(dplyr)
-p_load(tidytext)
-p_load(janeaustenr)
+
 
 qgram_hash <- function(strings, n=2, k=0) {
+  library(dissUtils)
+  library(dplyr)
+  library(tidytext)
+  library(janeaustenr)
   strings <- as.character(strings)
 
-  p_load(quanteda)
+  library(quanteda)
   gram_list <- list()
   for (i in 1:n) {
     for (k in 0:k) {
@@ -123,7 +123,7 @@ qgram_hash <- function(strings, n=2, k=0) {
 
 #
 # #We can calculate jiccard dircetly and then see if there's a threshold that works
-# p_load(parallelDist)
+# library(parallelDist)
 # d <- parDist(dtm_m, method = "binary") #calculate the jaccard distance directly
 # saveRDS(d,"/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar/inst/extdata/humanlabeled_ngram_dist_1_4_skips.Rds") #.011 is about 300 and 0.015
 #

@@ -21,7 +21,7 @@ lhs_textreuse <- function(minhash_count=240,  bands=80, ngram_count=2){
                                       progress = T)
   #buckets <- lsh(corpus_ab_spaced, bands = 80, progress = T) #Single threaded but should be parallizable
 
-  #p_load(multicore)
+  #library(multicore)
   n.cores <- parallel::detectCores()
   cuts <- cut(1:length(corpus_ab_spaced), n.cores)
   #buckets_list <- mclapply(levels(cuts),
