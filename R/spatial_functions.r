@@ -88,7 +88,7 @@ to_polygon_df <- function(coords, ID=1, df=NULL) {
 li_sde <- function(coords, id=1) {
   # library(aspace)
   
-  taken entirely from aspace::calc_sde
+  ta#ken entirely from aspace::calc_sde
   points <- coords
 
   centre.xy <- NULL
