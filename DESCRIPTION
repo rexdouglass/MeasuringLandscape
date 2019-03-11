@@ -10,8 +10,6 @@ LazyData: true
 URL: https://github.com/rexdouglass/MeasuringLandscapeCivilWar
 BugReports: https://github.com/rexdouglass/MeasuringLandscapeCivilWar/issues
 Remotes: git::https://github.com/hadley/ggplot2.git
-Depends:
-Imports:
 Suggests:
   ggplot2,
   magrittr,
