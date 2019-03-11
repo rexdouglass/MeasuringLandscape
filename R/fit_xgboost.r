@@ -2,7 +2,6 @@
 
 
 
-library(xgboost)
 train_an_xb <- function(xy_train,
                         xy_test,
                         vars_x,
@@ -15,6 +14,7 @@ train_an_xb <- function(xy_train,
                         early_stopping_rounds=10,
                         nrounds=200
 ){
+  library(xgboost)
   
   #https://github.com/dmlc/xgboost/blob/master/demo/kaggle-higgs/higgs-train.R
   
