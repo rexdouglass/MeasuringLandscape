@@ -16,7 +16,7 @@ Suggests:
   data.table,
   tidyverse,
   stringdist,
-  sf
+  sf,
   broom,
   car,
   caTools,
