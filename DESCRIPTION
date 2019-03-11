@@ -12,7 +12,6 @@ BugReports: https://github.com/rexdouglass/MeasuringLandscapeCivilWar/issues
 Remotes: git::https://github.com/hadley/ggplot2.git
 Imports:
   tidyverse,
-  magrittr,
   data.table,
   stringdist,
   sf,
