@@ -73,5 +73,7 @@ Analysis: Main analysis of the paper.
 * [10 Bias](https://rexdouglass.github.io/MeasuringLandscape/10_bias.nb.html): Demonstrate that the kinds of locations that are imputed are different from the true locations, in terms of things like population, distance from roads, ruggedness, etc.
 * [11 So What](https://rexdouglass.github.io/MeasuringLandscape/11_so_what.nb.html): Demonstrate that different georeferencing decisions will produce different results in a simple linear regression model in terms of both statistical significance and substantive effects.
 
+* [12 Kenya Events with Suggested Codings](https://rexdouglass.github.io/MeasuringLandscape/12_Kenya_events_with_suggested_codings.nb.html): Release the event dataset with a single georeferencing based on the ensemble method.
+
  
 
