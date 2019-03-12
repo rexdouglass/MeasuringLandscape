@@ -35,6 +35,6 @@ ggplot(events_sf_geocoded) + geom_sf(aes(colour=document_district)) #plotting us
 
 ```{r}
 
-saveRDS(events_sf_geocoded, glue::glue(getwd(), "/../inst/extdata/events_sf_geocoded.Rdata"))
+saveRDS(events_sf_geocoded, glue::glue(getwd(), "/../inst/extdata/events_sf_geocoded.Rds"))
 
 ```
