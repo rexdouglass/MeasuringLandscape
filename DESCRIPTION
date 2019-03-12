@@ -17,7 +17,6 @@ Imports:
   sf,
   broom
 Suggests:
-  car,
   caTools,
   cowplot,
   date,

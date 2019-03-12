@@ -11,9 +11,7 @@ plot_partial_effects <- function(rf=rf_mapcoordinate_clean_missing,
                                  histogram=F,
                                  scale=4) {
   
-  #p_load(Hmisc)
-  sentence_case <- function(x) Hmisc::capitalize(tolower(gsub("_"," ",x)))
-  
+  sentence_case <- function(x) stringr::str_to_sentence(tolower(gsub("_"," ",x)))  
   
   #Dummies packagr broke
   #options(na.action='na.pass')
@@ -62,7 +60,7 @@ plot_partial_effects <- function(rf=rf_mapcoordinate_clean_missing,
     predictions_list[[q]]$xvar <- q
     predictions_list[[q]]$yvar <- outcome
   }
-  predictions <- rbindlist(predictions_list)
+  predictions <- data.table::rbindlist(predictions_list)
   
   #boxplot(TRUE.~xvar, predictions) #I thought I understood how this works but I clearly don't.
   temp <- aggregate(predictions, by=list(predictions$xvar), FUN=median)

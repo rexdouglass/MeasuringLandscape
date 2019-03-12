@@ -5,16 +5,15 @@
 
 
 firstmismatch <- function(a, b, verbose=T) {
-  dt <- data.table(a = a,
+  dt <- data.table::data.table(a = a,
                    b = b)
-  dt <- as.data.table(dt)
+  dt <- data.table::as.data.table(dt)
   dt[, counts := 0, ] # All counts start as zero matches
   dt[, condition := T, ] # All eligibile from the start
   dt[, nchars1 := nchar(a), by = a] # Stop counting for each when we pass this
   dt[, nchars2 := nchar(b), by = b]
 
-
-  nchars_max <- max(dt$nchars1)
+  nchars_max <- max(dt$nchars1,na.rm=T)
 
   for (i in 1:nchars_max) {
     if (verbose) {

@@ -6,7 +6,7 @@ toponym_training_dataset_load <- function(
                                           ){
   
   #Load the hand labels
-  handlabeled <- fread(
+  handlabeled <- data.table::fread(
     system.file("extdata", "event_flatfile_matches_for_hand_labeling - event_flatfile_matches_for_hand_labeling.csv",
                 package = "MeasuringLandscape"),
     data.table=T) 

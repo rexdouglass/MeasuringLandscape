@@ -21,8 +21,8 @@ clean_noascii <- function(text) {
 common_cleaning <- function(q) {
   q %>%
     janitor::clean_names() %>%
-    janitor::remove_empty_rows() %>%
-    janitor::remove_empty_cols() %>%
+    janitor::remove_empty(which="rows") %>%
+    janitor::remove_empty(which="cols") %>%
     mutate_if(is.factor, as.character) %>%
     mutate_if(is.character, funs(stringi::stri_enc_toascii)) %>%
     mutate_if(is.character, funs(gsub("\032", "", .))) %>% # converts everything to character and proper UTF8

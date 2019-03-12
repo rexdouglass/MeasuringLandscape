@@ -9,8 +9,8 @@ prep_events <- function(fromscratch=F) {
     events <- readr::read_csv(glue::glue("C:/Users/skynetmini/Dropbox (rex)/MSSL/projects/MeasuringLandscape/MeasuringLandscapeCivilWar_TooBig/",
                             "Kenya_Events_SollyStreamPerfect_Original_RexMerged_2015_donebyhand.csv")) %>%
       janitor::clean_names() %>%
-      janitor::remove_empty_rows() %>%
-      janitor::remove_empty_cols() %>%
+      janitor::remove_empty("rows") %>%
+      janitor::remove_empty("cols") %>%
       mutate_all(funs(stringi::stri_enc_toascii)) %>% # converts everything to character and proper UTF8
       mutate_all(funs(trimws)) %>% # remove whitespace
       distinct()
@@ -18,7 +18,7 @@ prep_events <- function(fromscratch=F) {
 
     saveRDS(events, "C:/rex_github_private/MeasuringLandscape/inst/extdata/MeasuringLandscapeCivilWar_events.Rds")
   }
-
+  #Load data we prepared beforehand
   events <- readRDS(system.file("extdata", "MeasuringLandscapeCivilWar_events.Rds", package = "MeasuringLandscape"))
   dim(events)
 

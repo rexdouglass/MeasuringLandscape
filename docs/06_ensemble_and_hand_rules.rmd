@@ -28,6 +28,7 @@ rm(list=ls()); gc()
 # Hiding output and warnings
 # !diagnostics off
 library(MeasuringLandscape)
+library(tidyverse)
 
 dir_figures <- glue::glue(getwd(), "/../paper/figures/")
 
@@ -81,7 +82,7 @@ georef_all_dt <- georef_all_dt %>%
                                    "openstreetmap"=14,
                                    "kenya_cadastral"=15
   )) %>%
-  as.data.table()
+  data.table::as.data.table()
 table(georef_all_dt$source_dataset,
       georef_all_dt$handrule4, useNA="always")
 
@@ -91,7 +92,7 @@ georef_all_dt$handrule <- paste(stringr::str_pad(georef_all_dt$handrule1, 2, pad
                                 stringr::str_pad(georef_all_dt$handrule4, 2, pad = "0"),
                                 sep="_")
 
-setkey(georef_all_dt, handrule )
+data.table::setkey(georef_all_dt, handrule )
 temp <- subset(georef_all_dt,event_hash=="be37b40f")
 
 
@@ -140,7 +141,7 @@ vars_x_string <- c(
 
 georef_all_dt$a <- georef_all_dt$name_cleaner
 georef_all_dt$b <- georef_all_dt$georef_b
-georef_all_dt <- toponym_add_distances_dt(georef_all_dt)
+georef_all_dt <- MeasuringLandscape:::toponym_add_distances_dt(georef_all_dt)
 
 dpredict<-xgb.DMatrix(data= as.matrix(georef_all_dt[,vars_x_string, with=F]), missing = NA)
 georef_all_dt$toponym_xb_model_prediction <- predict( toponym_xb_model, dpredict )
@@ -243,7 +244,7 @@ predictions_all[condition] <- cross_valid_predictions #but for the subset we tra
 georef_all_dt$rule_ensemble <- exp(predictions_all)
 
 
-setkey(georef_all_dt, handrule )
+data.table::setkey(georef_all_dt, handrule )
 temp <- subset(georef_all_dt,event_hash=="be37b40f")
 
 saveRDS(georef_all_dt,
@@ -254,7 +255,7 @@ saveRDS(georef_all_dt,
 
 Evaluate accuracy (Appendix Figure 7)
 
-```{r}
+```{r, fig.width=12, fig.height=8}
 #plot(georef_all_dt$rule_ensemble, georef_all_dt$distance_km)
 p_ensemble_risiduals <- georef_all_dt %>% ggplot(aes(x=log(distance_km), y=log(rule_ensemble) )) + 
     geom_point(alpha=.01) + 
@@ -277,7 +278,7 @@ ggsave(
 
 
 Variable importance (Appendix Figure 8)
-```{r}
+```{r, fig.width=12, fig.height=8}
 
 importance_importance <- xgboost::xgb.importance(feature_names=colnames(dtrain), model = xb2) #won't calculate on cv
 

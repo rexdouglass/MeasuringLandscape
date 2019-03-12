@@ -26,6 +26,7 @@ rm(list=ls()); gc()
 # Hiding output and warnings
 # !diagnostics off
 library(MeasuringLandscape)
+library(tidyverse)
 
 dir_figures <- paste0(here::here(), "/paper/figures/")
 
@@ -60,8 +61,8 @@ We load the combined gazetteer files.
 #Load Gazetteers
 flatfiles_sf_roi <- readRDS(system.file("extdata", "flatfiles_sf_roi.Rdata", package = "MeasuringLandscape")) 
 dim(flatfiles_sf_roi)
-flatfiles_dt <- as.data.table(flatfiles_sf_roi)
-setkey(flatfiles_dt,place_hash)
+flatfiles_dt <- data.table::as.data.table(flatfiles_sf_roi)
+data.table::setkey(flatfiles_dt,place_hash)
 
 ```
 
@@ -224,10 +225,10 @@ stemmed_ab_suggestions$N <- 1
 glue::glue(stemmed_ab_suggestions %>% nrow() , " string matches")
 
 #Link a stemmed_a to stemmed b
-stemmed_ab_suggestions_events <- rbindlist(list(
+stemmed_ab_suggestions_events <- data.table::rbindlist(list(
   stemmed_ab_suggestions[,c('stemmed_a','stemmed_b','N')],
-  setnames(stemmed_ab_suggestions[,c('stemmed_a','stemmed_b','N')], c('stemmed_b','stemmed_a','N')  ), 
-  setnames(stemmed_ab_suggestions[,c('stemmed_a','stemmed_a','N')], c('stemmed_b','stemmed_b','N')  ) #make sure it's a suggestion for itself
+  data.table::setnames(stemmed_ab_suggestions[,c('stemmed_a','stemmed_b','N')], c('stemmed_b','stemmed_a','N')  ), 
+  data.table::setnames(stemmed_ab_suggestions[,c('stemmed_a','stemmed_a','N')], c('stemmed_b','stemmed_b','N')  ) #make sure it's a suggestion for itself
 )) ; dim(stemmed_ab_suggestions_events)
 
 stemmed_ab_suggestions_events <- unique(stemmed_ab_suggestions_events) ; #dim(stemmed_ab_suggestions_events) #859,118
@@ -239,7 +240,7 @@ glue::glue(stemmed_ab_suggestions_events %>% nrow() , " string matches")
 
 #Step 2 Pull all full
 ab_suggestions_events <- merge(stemmed_ab_suggestions_events,
-                               setnames(names_and_stems, c("name_cleaner_a","name_cleaner_stem")) ,
+                               data.table::setnames(names_and_stems, c("name_cleaner_a","name_cleaner_stem")) ,
                                by.x="stemmed_a",
                                by.y="name_cleaner_stem",
                                all.x=T,
@@ -252,7 +253,7 @@ glue::glue(stemmed_ab_suggestions_events %>% nrow() , " string matches")
 #DT::datatable(ab_suggestions_events[stemmed_a=="gura"])
 
 ab_suggestions_events <- merge(ab_suggestions_events,
-                                     setnames(names_and_stems, c("name_cleaner_b","name_cleaner_stem")) ,
+                                     data.table::setnames(names_and_stems, c("name_cleaner_b","name_cleaner_stem")) ,
                                      by.x="stemmed_b",
                                      by.y="name_cleaner_stem",
                                      all.x=T,
@@ -284,7 +285,7 @@ glue::glue(ab_suggestions_events %>% nrow() , " string matches after removing th
 
 Next, we refine the remaining matches using additional string distance features and an XGBoost model trained earlier on the labeled match/no match toponym training examples.
 
-```{r}
+```{r, fig.width=12, fig.height=8}
 ab_suggestions_events$a <- ab_suggestions_events$stemmed_a
 ab_suggestions_events$b <- ab_suggestions_events$stemmed_b
 
@@ -427,7 +428,7 @@ flatfiles_sf_roi_centroids <- flatfiles_sf_roi %>% filter(!is.na(latitude) | geo
 #1) Diads chosen by fuzzy ab_suggestions_directed 
 #2) Diads of identical
 
-georef <- setnames( ab_suggestions_directed[,c('name_cleaner_a','name_cleaner_b','toponym_xb_model_prediction')] , c('georef_a','georef_b','toponym_xb_model_prediction') ) #So this is now a list of names that are either identical or fuzzy matches for one another
+georef <- data.table::setnames( ab_suggestions_directed[,c('name_cleaner_a','name_cleaner_b','toponym_xb_model_prediction')] , c('georef_a','georef_b','toponym_xb_model_prediction') ) #So this is now a list of names that are either identical or fuzzy matches for one another
 georef$georef_a <- trimws(georef$georef_a)
 georef$georef_b <- trimws(georef$georef_b)
 georef <- unique(georef)
@@ -438,7 +439,7 @@ table(events_sf$name_cleaner %in% georef$georef_a) #7,742 events with at least o
 #This is mapping of events to identical and fuzzy
 #georef2 is a combination of events, and all the gazetteer names they might match to
 georef2 <- as.data.frame(events_sf)[,c('event_hash', 'name_cleaner','document_district_clean','document_unit_type','document_date_best_year')] %>% 
-  left_join(georef, by = c("name_cleaner" = "georef_a")) %>% unique()  
+  dplyr::left_join(georef, by = c("name_cleaner" = "georef_a")) %>% unique()  
 dim(georef2)
 
 table(events_sf$name_cleaner %in% georef2$name_cleaner) #All events are in here
@@ -453,7 +454,7 @@ table(events_sf$event_hash %in% georef2$event_hash) #All event hashes show up in
 #This is a mapping of events to gaz where either their exact or fuzzy counterparts matched each other
 #georef all is a mapping of events, to gazetteer names, to 
 georef_all <- georef2 %>% 
-             left_join(as.data.frame(flatfiles_sf_roi_centroids)[,c('place_hash','source_dataset','name_cleaner','geometry_type','feature_code')],
+             dplyr::left_join(as.data.frame(flatfiles_sf_roi_centroids)[,c('place_hash','source_dataset','name_cleaner','geometry_type','feature_code')],
                        by = c("georef_b" = "name_cleaner")) %>% unique()
 dim(georef_all)   #303,174
 

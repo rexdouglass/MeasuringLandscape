@@ -103,7 +103,7 @@ For each possible georeferencing decision, we fit a seperate linear model predic
 
 #Hand Rule
 lm_results_list0 <- list()
-setkey(georef_all_dt, rule_ensemble)
+data.table::setkey(georef_all_dt, rule_ensemble)
 georef_all_dt_ensemble <- georef_all_dt[,.SD[1], by=list(event_hash) ]
 
 condition <- paste(georef_all_dt_events_sf$event_hash, georef_all_dt_events_sf$place_hash) %in% 
@@ -117,7 +117,7 @@ temp_results$label <- "Hand Rule"
 lm_results_list0[[as.character("Hand Rule")]] <- temp_results
 
 #Ensemble Rule
-setkey(georef_all_dt, rule_ensemble)
+data.table::setkey(georef_all_dt, rule_ensemble)
 georef_all_dt_ensemble <- georef_all_dt[,.SD[1], by=list(event_hash) ]
 
 condition <- paste(georef_all_dt_events_sf$event_hash, georef_all_dt_events_sf$place_hash) %in% 
@@ -211,18 +211,17 @@ for(q in unique(georef_all_dt_events_sf$SelfReference)){
 ```{r, fig.width=15, fig.height=10}
 
 
-lm_results_dt <- rbindlist( list(  rbindlist(lm_results_list0),
-                                   rbindlist(lm_results_list),
-                                   rbindlist(lm_results_list2),
-                                   rbindlist(lm_results_list3),
-                                   rbindlist(lm_results_list4)
+lm_results_dt <- data.table::rbindlist( list(  data.table::rbindlist(lm_results_list0),
+                                   data.table::rbindlist(lm_results_list),
+                                   data.table::rbindlist(lm_results_list2),
+                                   data.table::rbindlist(lm_results_list3),
+                                   data.table::rbindlist(lm_results_list4)
 )
                            )
 lm_results_dt <- lm_results_dt %>% mutate(rate= round(exp(estimate),2) )
 
-#p_load(Hmisc)
-sentence_case <- function(x) Hmisc::capitalize(tolower(gsub("_"," ",x)))
 
+sentence_case <- function(x) stringr::str_to_sentence(tolower(gsub("_"," ",x)))
 
 #install.packages("extrafont");
 #library(extrafont)
@@ -246,7 +245,7 @@ fonts <- c('Times New Roman',
 #qplot(1:10)+theme(text=element_text(family=fonts[4]))
 #qplot(1:10)+theme(text=element_text(family=fonts[5]))
 
-lm_results_dt <- as.data.table(lm_results_dt)
+lm_results_dt <- data.table::as.data.table(lm_results_dt)
 lm_results_dt[Type=="Match Type" & label=="FALSE", label:= "Exact",]
 lm_results_dt[Type=="Match Type" & label=="TRUE", label:= "Fuzzy",]
 

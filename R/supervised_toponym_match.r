@@ -5,38 +5,38 @@
 toponym_add_distances_dt <- function(inputdata, fromscratch=F, nthread=parallel::detectCores()) {
   library(stringdist)
   
-  inputdata <- as.data.table(inputdata)
+  inputdata <- data.table::as.data.table(inputdata)
 
   print("1 of 24")
   inputdata[, First_Mistmatch := firstmismatch(a, b, verbose = F), ]
   print("2 of 24")
-  inputdata[, Jaro := stringsim(a, b, "jw", nthread = nthread), ]
+  inputdata[, Jaro := stringdist::stringsim(a, b, "jw", nthread = nthread), ]
   print("3 of 24")
-  inputdata[, Optimal_String_Alignment := stringsim(a, b, "osa", nthread = nthread), ]
+  inputdata[, Optimal_String_Alignment := stringdist::stringsim(a, b, "osa", nthread = nthread), ]
   print("4 of 24")
-  inputdata[, Levenshtein := stringsim(a, b, "lv", nthread = nthread), ]
+  inputdata[, Levenshtein := stringdist::stringsim(a, b, "lv", nthread = nthread), ]
   print("5 of 24")
-  inputdata[, Damerau_Levenshtein := stringsim(a, b, "dl", nthread = nthread), ]
+  inputdata[, Damerau_Levenshtein := stringdist::stringsim(a, b, "dl", nthread = nthread), ]
   print("6 of 24")
-  inputdata[, Longest_Common_Substring := stringsim(a, b, "lcs", nthread = nthread), ]
+  inputdata[, Longest_Common_Substring := stringdist::stringsim(a, b, "lcs", nthread = nthread), ]
   print("7 of 24")
-  inputdata[, q_gram_1 := stringsim(a, b, "qgram", nthread = nthread, q = 1), ]
+  inputdata[, q_gram_1 := stringdist::stringsim(a, b, "qgram", nthread = nthread, q = 1), ]
   print("8 of 24")
-  inputdata[, q_gram_2 := stringsim(a, b, "qgram", nthread = nthread, q = 2), ]
+  inputdata[, q_gram_2 := stringdist::stringsim(a, b, "qgram", nthread = nthread, q = 2), ]
   print("9 of 24")
-  inputdata[, q_gram_3 := stringsim(a, b, "qgram", nthread = nthread, q = 3), ]
+  inputdata[, q_gram_3 := stringdist::stringsim(a, b, "qgram", nthread = nthread, q = 3), ]
   print("10 of 24")
-  inputdata[, q_gram_4 := stringsim(a, b, "qgram", nthread = nthread, q = 4), ]
+  inputdata[, q_gram_4 := stringdist::stringsim(a, b, "qgram", nthread = nthread, q = 4), ]
   print("11 of 24")
-  inputdata[, q_gram_5 := stringsim(a, b, "qgram", nthread = nthread, q = 5), ]
+  inputdata[, q_gram_5 := stringdist::stringsim(a, b, "qgram", nthread = nthread, q = 5), ]
   print("12 of 24")
-  inputdata[, Cosine_1 := stringsim(a, b, "cosine", nthread = nthread, q = 1), ]
-  inputdata[, Cosine_2 := stringsim(a, b, "cosine", nthread = nthread, q = 2), ]
-  inputdata[, Cosine_3 := stringsim(a, b, "cosine", nthread = nthread, q = 3), ]
-  inputdata[, Cosine_4 := stringsim(a, b, "cosine", nthread = nthread, q = 4), ]
-  inputdata[, Cosine_5 := stringsim(a, b, "cosine", nthread = nthread, q = 5), ]
+  inputdata[, Cosine_1 := stringdist::stringsim(a, b, "cosine", nthread = nthread, q = 1), ]
+  inputdata[, Cosine_2 := stringdist::stringsim(a, b, "cosine", nthread = nthread, q = 2), ]
+  inputdata[, Cosine_3 := stringdist::stringsim(a, b, "cosine", nthread = nthread, q = 3), ]
+  inputdata[, Cosine_4 := stringdist::stringsim(a, b, "cosine", nthread = nthread, q = 4), ]
+  inputdata[, Cosine_5 := stringdist::stringsim(a, b, "cosine", nthread = nthread, q = 5), ]
   print("13 of 24")
-  inputdata[, Jaccard := stringsim(a, b, "jaccard", nthread = nthread), ]
+  inputdata[, Jaccard := stringdist::stringsim(a, b, "jaccard", nthread = nthread), ]
   print("14 of 24")
   inputdata$a_nchar <- nchar(inputdata$a)
   print("15 of 24")
@@ -44,21 +44,21 @@ toponym_add_distances_dt <- function(inputdata, fromscratch=F, nthread=parallel:
   print("16 of 24")
   inputdata$ab_nchar_diff <- abs(inputdata$a_nchar - inputdata$b_nchar)
   print("17 of 24")
-  inputdata[, dJaro := stringdist(a, b, "jw", nthread = nthread), ]
+  inputdata[, dJaro := stringdist::stringdist(a, b, "jw", nthread = nthread), ]
   print("18 of 24")
-  inputdata[, dOptimal_String_Alignment := stringdist(a, b, "osa", nthread = nthread), ]
+  inputdata[, dOptimal_String_Alignment := stringdist::stringdist(a, b, "osa", nthread = nthread), ]
   print("19 of 24")
-  inputdata[, dLevenshtein := stringdist(a, b, "lv", nthread = nthread), ]
+  inputdata[, dLevenshtein := stringdist::stringdist(a, b, "lv", nthread = nthread), ]
   print("20 of 24")
-  inputdata[, dDamerau_Levenshtein := stringdist(a, b, "dl", nthread = nthread), ]
+  inputdata[, dDamerau_Levenshtein := stringdist::stringdist(a, b, "dl", nthread = nthread), ]
   print("21 of 24")
-  inputdata[, dLongest_Common_Substring := stringdist(a, b, "lcs", nthread = nthread), ]
+  inputdata[, dLongest_Common_Substring := stringdist::stringdist(a, b, "lcs", nthread = nthread), ]
   print("22 of 24")
-  inputdata[, dq_gram := stringdist(a, b, "qgram", nthread = nthread), ]
+  inputdata[, dq_gram := stringdist::stringdist(a, b, "qgram", nthread = nthread), ]
   print("23 of 24")
-  inputdata[, dCosine := stringdist(a, b, "cosine", nthread = nthread), ]
+  inputdata[, dCosine := stringdist::stringdist(a, b, "cosine", nthread = nthread), ]
   print("24 of 24")
-  inputdata[, dJaccard := stringdist(a, b, "jaccard", nthread = nthread), ]
+  inputdata[, dJaccard := stringdist::stringdist(a, b, "jaccard", nthread = nthread), ]
 
   # p_load(TraMineR)
   # http://traminer.unige.ch/doc/seqdef.html
@@ -119,7 +119,7 @@ toponym_add_distances_dt <- function(inputdata, fromscratch=F, nthread=parallel:
 
 # This is for corpus features that are no longer used in the paper
 toponym_add_corpus <- function(data, fromscratch=F) {
-  data <- as.data.table(data)
+  data <- data.table::as.data.table(data)
 
   # Load the ngram corpus and use it to look up things
   # Takes a while to load even with fst
@@ -127,14 +127,14 @@ toponym_add_corpus <- function(data, fromscratch=F) {
 
   # Add feature counts from the gazzetter
   if (fromscratch) {
-    csv_dt_grams_all <- read.fst("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar/inst/extdata/csv_dt_grams_all.fst", as.data.table = T) # this is expensive
+    csv_dt_grams_all <- fst::read.fst("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar/inst/extdata/csv_dt_grams_all.fst", as.data.table = T) # this is expensive
     head(csv_dt_grams_all)
     setkey(csv_dt_grams_all, bigram) # this is going to take a while, and then we're going to pull every single flatfile and event name_cleaner and save that as a smaller file for next time
     csv_dt_grams_places <- csv_dt_grams_all[bigram %in% unique(c(events_dt$name_cleaner, flatfiles_sf$name_cleaner)), ]
     dim(csv_dt_grams_places) # 20k matches
     fwrite(csv_dt_grams_places, "/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar/inst/extdata/csv_dt_grams_places.csv")
   }
-  csv_dt_grams_places <- fread("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar/inst/extdata/csv_dt_grams_places.csv")
+  csv_dt_grams_places <- data.table::fread("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar/inst/extdata/csv_dt_grams_places.csv")
 
   csv_dt_grams_places_a <- csv_dt_grams_places[, c("bigram", "count", "year_min", "year_median", "year_mean", "year_max")]
   names(csv_dt_grams_places_a) <- c("bigram_a", "corpus_mention_count_a", "corpus_mention_year_min_a", "corpus_mention_year_median_a", "corpus_mention_year_mean_a", "corpus_mention_year_max_a")
@@ -152,7 +152,7 @@ toponym_add_corpus <- function(data, fromscratch=F) {
     temp <- strip_postfixes(flatfiles_sf$name_cleaner)
     flatfiles_sf$name_cleaner_stem <- temp[[1]]
 
-    fwrite(as.data.frame(flatfiles_sf)[
+    data.table::fwrite(data.table::as.data.frame(flatfiles_sf)[
       !flatfiles_sf$source_dataset %in% c("events", "events_poly"),
       c("name_cleaner", "name_cleaner_stem")
     ], "/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar/inst/extdata/gazeteer_grams_noevents.csv")
@@ -164,14 +164,14 @@ toponym_add_corpus <- function(data, fromscratch=F) {
 
   data <- merge(
     data,
-    setnames(temp, c("name_cleaner", "gazeteer_mentions_count_a")),
+    data.table::setnames(temp, c("name_cleaner", "gazeteer_mentions_count_a")),
     by.x = "a",
     by.y = "name_cleaner",
     all.x = T
   )
   data <- merge(
     data,
-    setnames(temp, c("name_cleaner", "gazeteer_mentions_count_b")),
+    data.table::setnames(temp, c("name_cleaner", "gazeteer_mentions_count_b")),
     by.x = "b",
     by.y = "name_cleaner",
     all.x = T
@@ -179,14 +179,14 @@ toponym_add_corpus <- function(data, fromscratch=F) {
 
   data <- merge(
     data,
-    setnames(temp2, c("name_cleaner_stem", "gazeteer_stem_mentions_count_a")),
+    data.table::setnames(temp2, c("name_cleaner_stem", "gazeteer_stem_mentions_count_a")),
     by.x = "a",
     by.y = "name_cleaner_stem",
     all.x = T
   )
   data <- merge(
     data,
-    setnames(temp2, c("name_cleaner_stem", "gazeteer_stem_mentions_count_b")),
+    data.table::setnames(temp2, c("name_cleaner_stem", "gazeteer_stem_mentions_count_b")),
     by.x = "b",
     by.y = "name_cleaner_stem",
     all.x = T
@@ -207,7 +207,7 @@ toponym_add_corpus <- function(data, fromscratch=F) {
 }
 
 toponym_add_features <- function(data, fromscratch=F) {
-  data <- as.data.table(data)
+  data <- data.table::as.data.table(data)
   data <- toponym_add_distances_dt(data)
   # data <- toponym_add_corpus(data) #Currently excluded from paper
 

@@ -22,6 +22,8 @@ rm(list=ls()); gc()
 # Hiding output and warnings
 # !diagnostics off
 library(MeasuringLandscape)
+library(tidyverse) #load independently just to make sure %>% gets imported
+
 #devtools::load_all()
 dir_figures <- glue::glue(getwd(), "/../paper/figures/")
 dir_package_files <- glue::glue(getwd(), "/inst/extdata/")
@@ -310,7 +312,7 @@ flatfiles_sf_roi$feature_code_txt %>% janitor::tabyl(sort = TRUE) %>% janitor::a
 
 Visual inspection reveals differences between the spatial coverage of each source. (Appendix Figure 1 and Appendix Figure 3)
 
-```{R}
+```{R, fig.width=12, fig.height=8}
 
 # flatfiles %>% ggplot(aes(x=longitude,y=latitude, col=as.factor(source_dataset))) + geom_point(alpha = 0.1)
 p_points <- flatfiles_sf_roi %>%
@@ -350,7 +352,7 @@ p_notpoints
 (Appendix Figure 2 on Longitude)
 
 
-```{R}
+```{R, fig.width=12, fig.height=8}
 
 # Events and historical have the smoothest distributions, but that's misleading because conversion from degrees to decimal
 # Wikidata has lots of truncated precision entries, at 0 degrees

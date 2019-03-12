@@ -26,9 +26,9 @@ In this file, a raw csv file of the events dataset created for the Mau Mau rebel
 
 ```{r , results='hide', message=FALSE, warning=FALSE}
 
-rm(list=ls()); gc()
+rm(list=ls()); gc() #clear objects from memory
 library(MeasuringLandscape)
-
+library(tidyverse) #load independently just to make sure %>% gets imported
 
 knitr::opts_knit$set(progress = TRUE, verbose = TRUE)
 knitr::opts_chunk$set(fig.width = 12, fig.height = 8, warning = FALSE, message = FALSE, cache = TRUE)
@@ -39,9 +39,8 @@ options(width = 160)
 # Load Events Data
 
 ```{r}
-
 events <- MeasuringLandscape:::prep_events(fromscratch = F)
-
+dim(events)
 ```
 
 # Dates
@@ -66,7 +65,7 @@ events <- events %>%
   
 events %>% filter(is.na(event_date_clean)) %>% dplyr::select(starts_with("event_date")) %>% distinct() %>% print(n=40) #visualize errors
 
-events$event_date_clean_year <- year(events$event_date_clean)
+events$event_date_clean_year <- lubridate::year(events$event_date_clean)
 events$event_date_clean_year %>% janitor::tabyl() %>% round(3)
 
 ```
@@ -128,7 +127,7 @@ events %>% filter(is.na(document_date_clean_1)) %>% dplyr::select(starts_with("d
 events$document_date_best_date <- events$document_date_clean_2
 condition <- is.na(events$document_date_best_date)
 events$document_date_best_date[condition] <- events$document_date_clean_1[condition]
-(events$document_date_best_year <- year(events$document_date_best_date)) %>% janitor::tabyl() %>% round(3)
+(events$document_date_best_year <- lubridate::year(events$document_date_best_date)) %>% janitor::tabyl() %>% round(3)
 
 ```
 
@@ -138,31 +137,30 @@ events$document_date_best_date[condition] <- events$document_date_clean_1[condit
 ```{r , results="asis"}
 
 cat("\014")
-#p_load(car, stringi, stringr, xtable, SnowballC)
 events$type_clean <- stringr::str_trim(stringi::stri_trans_totitle(events$type))
 
 events$type_clean_agglow <- events$type_clean %>%
   stringr::str_trim() %>%
   tolower() %>%
-  car::recode("
-             'desertion'='desertion';
-             'escape'='escape';
-             c('abduction','kidnapping','kidnap','kitnap','kindnap')='abduction';
-             c('assault','attack','assaulted','assaults','assualt','assult')='assault';
-             c('murder','elimination','kidnap / murder','')='murder';
-             c('arson','burn')='arson';
-             c('slashed','stampede')='cattle slashing';
-             'vandalism'='vandalism';
-             c('theft','thefts','thet','missing','lost','entry')='theft';
-             c('confiscate','sentenced')='punishment';
-             c('capture','captured')='rebel capture';
-             c('oath','oathing','recruitment','recruited')='oathing';
-             c('contact','caontact','contacts','drove off','drive off','drove  off',
-              'chased off','broke up oathing','ambush')='contact';
-             c('patrol','police and kpr patrol','sweep')='patrol';
-             c('screening','sreening')='screening';
-             c('type')='unclassified'
-             ")
+  forcats::fct_collapse( #removed Car dependency for forcats
+             'desertion'='desertion',
+             'escape'='escape',
+             'abduction'=c('abduction','kidnapping','kidnap','kitnap','kindnap'),
+             'assault'=c('assault','attack','assaulted','assaults','assualt','assult'),
+             'murder'=c('murder','elimination','kidnap / murder',''),
+             'arson'=c('arson','burn'),
+             'cattle slashing'=c('slashed','stampede'),
+             'vandalism'='vandalism',
+             'theft'=c('theft','thefts','thet','missing','lost','entry'),
+             'punishment'=c('confiscate','sentenced'),
+             'rebel capture'=c('capture','captured'),
+             'oathing'=c('oath','oathing','recruitment','recruited'),
+             'contact'=c('contact','caontact','contacts','drove off','drive off','drove  off',
+              'chased off','broke up oathing','ambush'),
+             'patrol'=c('patrol','police and kpr patrol','sweep'),
+             'screening'=c('screening','sreening'),
+             'unclassified'=c('type')
+)
 
 events$type_clean_agglow %>%
   janitor::tabyl(sort = TRUE) %>%
@@ -175,25 +173,26 @@ events$type_clean_agglow %>%
 
 ```{r ,cache=T}
 
-(events$type_clean_aggmed <- car::recode(events$type_clean_agglow, "
-                                 c('abduction','assault','murder')='physical violence';
-                                 c('vandalism','arson','cattle slashing')='property destruction';
-                                 c('theft')='theft';
-                                 c('contact','screening','sreening','patrol','punishment')='security operations';
-                                 c('desertion','escape','unclassified')='unclassified';
-                            ")) %>%
+(events$type_clean_aggmed <- events$type_clean_agglow %>% forcats::fct_collapse(
+                                 'physical violence'=c('abduction','assault','murder'),
+                                 'property destruction'=c('vandalism','arson','cattle slashing'),
+                                 'theft'=c('theft'),
+                                 'security operations'=c('contact','screening','sreening','patrol','punishment'),
+                                 'unclassified'=c('desertion','escape','unclassified')
+                            )
+ ) %>%
   janitor::tabyl(sort = TRUE) %>%
   janitor::adorn_crosstab(digits = 1)
+ 
 ```
 
 ```{r ,cache=T}
 
-events$type_clean_agghigh <- car::recode(events$type_clean_aggmed, "
-                                 c('oathing','physical violence','property destruction','theft')='rebel activity';
-                                 c('rebel capture','security operations')='government activity';
-                            ")
-
-events$type_clean_agghigh %>%
+(events$type_clean_agghigh <- events$type_clean_aggmed %>% forcats::fct_collapse(
+                                 'rebel activity'=c('oathing','physical violence','property destruction','theft'),
+                                 'government activity'=c('rebel capture','security operations')
+                            )
+) %>%
   janitor::tabyl(sort = TRUE) %>%
   janitor::adorn_crosstab(digits = 1)
 
@@ -210,192 +209,115 @@ Collapsed Initiators to just Rebels, Government, and Civilians
 
 cat("\014")
 
-initiator_target_master_clean <- "
-c('ammunition')= 'ammunition' ;
+initiator_target_master_clean <- list(
+  
+'ammunition'=c('ammunition'),
 
-c('explosives', 'gelignite')= 'explosives' ;
+'explosives'=c('explosives', 'gelignite'),
 
-c('arms', 'firearm', 'gun', 'pistol', 'rifle',
-'ammunition', 'rifile', 'shotgun', 'verey pistol')= 'firearms' ;
+'firearms'=c('firearms','arms', 'firearm', 'gun', 'pistol', 'rifle', 'ammunition', 'rifile', 'shotgun', 'verey pistol'),
 
-c('axe','scabbard','weapons')= 'other weapons' ;
+'other weapons'=c('other weapons','axe','scabbard','weapons'),
 
-c('councillor', 'district commissioner', 'district officer', 'forest ranger', 'game ranger', 
-'game warden', 'government',
-'government employees', 'port authority', 'public works department', 'screening team' , 'do', 
-'govrnment', 'wakamba screening team',
-'do munuga','african do','dcmeru', 'colonial authorities' ,'govtemployee'
-)= 'colonial authorities' ;
+'colonial authorities'=c('colonial authorities','councillor', 'district commissioner', 'district officer', 'forest ranger', 'game ranger', 'game warden', 'government', 'government employees', 'port authority', 'public works department', 'screening team' , 'do', 'govrnment', 'wakamba screening team', 'do munuga','african do','dcmeru', 'colonial authorities' ,'govtemployee' ),
 
-c('chief', 'elders', 'headman' , 'chief chostram','chief eliud', 'chief\\'s sentry'
-)= 'tribal authorities' ;
+'tribal authorities'=c('tribal authorities','chief', 'elders', 'headman' , 'chief chostram','chief eliud', "chief's sentry") ,
 
-c('buildings', 'cattle dip', 'duka', 'farms',
-'garage', 'homes','huts', 'hotel', 'land rover', 'lorry', 'market', 'office', 'oxcart', 'property', 
-'pump house', 'sawmill', 'shops', 'stores', 
-'tractor', 'vehicle', 'windmill' , 'bullock\\'s farm','cattle boma','coffe trees','coffee trees',
-'cuthouse','dairy farm','dip','house','household',
-'houses','hut','instrument','labour camp post','labour huts','lorries','lucerne sheds','maize shamba',
-'milk factory','pig sty','private property',
-'property of civilians','shop','store','thika fishing camp','vehicles')= 'private property';
+'private property'=c('private property','buildings', 'cattle dip', 'duka', 'farms', 'garage', 'homes','huts', 'hotel', 'land rover', 'lorry', 'market', 'office', 'oxcart', 'property',  'pump house', 'sawmill', 'shops', 'stores', 'tractor', 'vehicle', 'windmill' , "bullock's farm",'cattle boma','coffe trees','coffee trees', 'cuthouse','dairy farm','dip','house','household', 'houses','hut','instrument','labour camp post','labour huts','lorries','lucerne sheds','maize shamba', 'milk factory','pig sty','private property', 'property of civilians','shop','store','thika fishing camp','vehicles'),
 
-c('cash', 'funds', 'money' , 'conductor\\'s takings'
-)= 'cash';
+'cash'=c('cash', 'funds', 'money' , "conductor's takings"),
 
-c('banana', 'barley', 'bran', 'cabbage', 'coffee', 'corn', 'cream', 'crops', 'dairy', 'food', 
-'fruit', 'grain', 'honey', 'maize', 
-'meat', 'milk', 'oats', 'posho', 'potatoes', 'sugar', 'vegetable', 'wheat',
-'food','food etc','food store','food stores','foodstuffs','fruits','grains',
-'grains+cloth +money','green maize cobs','potato','potato store',
-'potatos','skimmed milk','sugar cane','sugar maize','vegetables','vegitable garden',
-'vegitables','wheat bags','wheat store','wheet','whisky'
-)= 'food';
+'food'=c('banana', 'barley', 'bran', 'cabbage', 'coffee', 'corn', 'cream', 'crops', 'dairy', 'food', 'fruit', 'grain', 'honey', 'maize',  'meat', 'milk', 'oats', 'posho', 'potatoes', 'sugar', 'vegetable', 'wheat',
+'food','food etc','food store','food stores','foodstuffs','fruits','grains', 'grains+cloth +money','green maize cobs','potato','potato store','potatos','skimmed milk','sugar cane','sugar maize','vegetables','vegitable garden', 'vegitables','wheat bags','wheat store','wheet','whisky') ,
 
-c('beast', 'cattle', 'cow', 'herd', 'livestock', 'pig', 'sheep', 'steer', 'stock',
+'livestock'=c('beast', 'cattle', 'cow', 'herd', 'livestock', 'pig', 'sheep', 'steer', 'stock',
 'animal', 'bulls','calf','calves','chicken','cows','donkey','goat','goats',
 'head of cattle','head of cow','head of sheep','heifer','heifers',
 'lamb','live stock','livestock','livestocks','masai herd','milk cow','ox','ox cart',
-'oxen','ram','red poll cattle','shee','sheep or ox','steers','stocks'
-)= 'livestock';
+'oxen','ram','red poll cattle','shee','sheep or ox','steers','stocks' ),
 
-c('medical supplies', 'medicine', 'm&b tablets', 'medicines')= 'medicine';
+'medicine'=c('medical supplies', 'medicine', 'm&b tablets', 'medicines'),
 
-c('bags', 'bedding', 'blankets', 'books', 'charcoal', 'cloth', 'clothing', 
-'cooking utensils', 'cutlery', 'equipment', 'farm implements', 
-'household items','instruments', 'iron', 'pails','petrol', 'provisions',
-'oil', 'sacks', 'supplies', 'tarpaulin', 'thatch', 'timber', 
-'tobacco', 'tools', 'uniforms', 'wire', 'wireless set', 'whiskey',
-'articles','bag','battery','bucket','ciga','cigarettes','clothes',
-'clothing etc','cloths','dairy item','dairy record book','goods',
-'material','oil+tins','provisionv','railway uniforms','supplies',
-'tarpaulian','typewriter','v- drive belts', 'gunny bags'
-)= 'supplies';
+'supplies'=c('supplies','bags', 'bedding', 'blankets', 'books', 'charcoal', 'cloth', 'clothing', 'cooking utensils', 'cutlery', 'equipment', 'farm implements', 
+'household items','instruments', 'iron', 'pails','petrol', 'provisions', 'oil', 'sacks', 'supplies', 'tarpaulin', 'thatch', 'timber', 
+'tobacco', 'tools', 'uniforms', 'wire', 'wireless set', 'whiskey', 'articles','bag','battery','bucket','ciga','cigarettes','clothes',
+'clothing etc','cloths','dairy item','dairy record book','goods', 'material','oil+tins','provisionv','railway uniforms','supplies', 'tarpaulian','typewriter','v- drive belts', 'gunny bags' ),
 
-c('church')= 'church';
+'church'=c('church'),
 
-c('airstrip', 'bridges', 'half built village', 'roads', 'trenches', 'water tank',
-'bridge', 'bridge broken', 'bridge damaged', 'infrastructure', 'milt property', 
-'miltproperty', 'prison camp','stn damaged'
-)= 'infrastructure';
+'infrastructure'=c('airstrip', 'bridges', 'half built village', 'roads', 'trenches', 'water tank','bridge', 'bridge broken', 'bridge damaged', 'infrastructure', 'milt property', 'miltproperty', 'prison camp','stn damaged'),
 
-c('school', 'school','school building','school house','school property','schools')= 'school';
+'school'=c('school', 'school','school building','school house','school property','schools'),
 
-c('bg','kg','eg', 'guard','embu guard', 'farm guard', 'forest guard', 'home guard',
-'ikandine guard', 'kathanjure guard', 'kijabe guard',
-'kikuyu guard', 'masai guard', 'meru guard', 'nandi guard', 'nkubu guard',
-'stock guard', 'tigoni guard','tp and eg patrol','hg','tp patrol','home guard patrol',
-'m', 'm/g','m/g patrol','g',
-'kathanjure hg','k g', 'ng',
-'eg patrol', 'hg camp','hg leader','hg patrol','hg post','home','home guard','kg post'
-)= 'home guard';
+'home guard'=c('bg','kg','eg', 'guard','embu guard', 'farm guard', 'forest guard', 'home guard','ikandine guard', 'kathanjure guard', 'kijabe guard',
+'kikuyu guard', 'masai guard', 'meru guard', 'nandi guard', 'nkubu guard', 'stock guard', 'tigoni guard','tp and eg patrol','hg','tp patrol','home guard patrol',
+'m', 'm/g','m/g patrol','g', 'kathanjure hg','k g', 'ng', 'eg patrol', 'hg camp','hg leader','hg patrol','hg post','home','home guard','kg post'),
 
-c('arab combat' , 'arab combat unit')= 'arab combat units';
+'arab combat units'=c('arab combat' , 'arab combat unit','arab combat units'),
 
-c('asian combat', 'asian combat unit', 'asian combat team', 'second asian combat unit' )= 'asian combat units';
+'asian combat units'=c('asian combat', 'asian combat unit', 'asian combat team', 'second asian combat unit','asian combat units' ),
 
-c('3 kar', '4 kar', '5 kar', '6 kar', '7 kar', '23 kar', '26 kar','k.a.r','k.p.r','k.a.r.',
-'5th k.a.r','5kar','5 k.a.r','4th kar','kar' ) = 'Kings African Rifles';
+'kings african rifles'=c('kings african rifles','3 kar', '4 kar', '5 kar', '6 kar', '7 kar', '23 kar', '26 kar','k.a.r','k.p.r','k.a.r.', '5th k.a.r','5kar','5 k.a.r','4th kar','kar' ) ,
 
-c('devonshire regiment','devons', 'field intelligence assistant', 'field intelligence officer',
-'fio', 'gloucestershire regiment', 'glosters', 'lancashire fusiliers', 'king\\'s shropshire light infantry',
-'royal east kent regiment', 'buffs', 'royal fusiliers', 'royal highland regiment','black watch',
-'watch', 'royal inniskilling fusiliers', 'royal irish fusiliers', 'royal northumberland fusiliers',
-'rnf','police and military', 'army' , 'lancashire fusilliers', 'sp company 1 royal innisks',
-'1 rnf', 'rif', 'ksli', 'inniskillings', 'fia','1 glosters', '1 bw', '1 buffs', 
-'\"a\" company 1 royal innisks',
-'\"a\" company', 'royal fusilers', 'of devons','of 1 glosters', 'lanc fus', 'fusiliers',
-'fio kruger','fios','a co devon','4 platoon support company',
-'\"c\" company1 royal innisks','6 platoonsp company 1 royal innisks','1 lf',
-'\"c\" company',
-'\"d\" company','\"a\"','\"a\" company bw','buffs ambush','d company','d\\' force','devens',
-'c company','\"d\" force',
-'army officer',
-'british army officer',
-'british military',
-'buffs patrol',
-'european officer',
-'european soldiers',
-'gloster patrol'
-)= 'british military';
+'british military'=c('british military', 'devonshire regiment','devons', 'field intelligence assistant', 'field intelligence officer', 'fio', 'gloucestershire regiment', 'glosters', 'lancashire fusiliers', 
+"king's shropshire light infantry", 'royal east kent regiment', 'buffs', 'royal fusiliers', 'royal highland regiment','black watch', 'watch', 'royal inniskilling fusiliers', 'royal irish fusiliers', 'royal northumberland fusiliers', 'rnf','police and military', 'army' , 'lancashire fusilliers', 'sp company 1 royal innisks', '1 rnf', 'rif', 'ksli', 'inniskillings', 'fia','1 glosters', '1 bw', '1 buffs', 
+'\"a\" company 1 royal innisks', '\"a\" company', 'royal fusilers', 'of devons','of 1 glosters', 'lanc fus', 'fusiliers', 'fio kruger','fios','a co devon','4 platoon support company',
+'\"c\" company1 royal innisks','6 platoonsp company 1 royal innisks','1 lf', '\"c\" company', '\"d\" company','\"a\"','\"a\" company bw','buffs ambush','d company',
+"d' force",'devens', 'c company','\"d\" force', 'army officer', 'british army officer', 'british military', 'buffs patrol', 'european officer', 'european soldiers', 'gloster patrol' ),
+
+'kenya regiment'=c('kenya regiment','captain folliott’s team' , 'kr', 'kenreg', 'kenregg','kenya regiment sergeant', 'kenya regt','keniya regiment','kenya regiment private'),
+
+ 'military (generic)'=c('military (generic)', 'captain', 'company', 'military', 'army', 'military property', 'platoon', 'security forces', 'security force', 'coy', 'striking force' ,'sentry', 'non commissioned officers', 'patrol', 'sentrie', 'sgt white' ),
+
+'psuedo gangs'=c('psuedo gangs','pseudo gang', 'pseudo team', 'trojan', 'psuedo gangs', 'trojan team' , 'tracker group', 'pseudo teams'),
+
+'royal air force'=c('royal air force','raf', 'bombers', 'air strike', 'harvards', 'raf lincolns','flying squard'),
+
+'paramilitary'=c('paramilitary','general service unit', 'gsu' ),
+
+'cid'=c('cid'),
+
+'kenya police'=c('kenya police', 'kp' , "kp constables' quarters", 'kpa' ),
+
+'kenya police reserve'=c('kenya police reserve', 'kpr', 'kpr officers', 'reserve police officer', 'rpo' , 'rpos', 'police and k.p.r'),
+
+'police (generic)'=c('police (generic)','constable', 'police', 'polce','policy party'),
+
+'railway police'=c('railway police' ),
+
+'special branch'=c('special branch', 'blue doctor team', 'special branch team', 'sb officers' ),
+
+'tribal police'=c('githumu police', 'masai special constable', 'tribal police', 'tp' , 'tpeg','african constable', 'african costable', 'african special constable', 'tribal police'),
+
+'tribal police reserve'=c('tribal police reserve', 'tpr')  ,
+
+'communities'=c('communities','manyatta', 'fishing camp', 'sublocation', 'village', 'camp' , 'villages') ,
+
+'detainees'=c('detainees', 'prisoner', 'prisoners'),
+
+'suspected insurgents'=c('suspected insurgents','bandits', 'food foragers', 'gangs', 'gang', 'kiama kia muingi' , 'kkm', 'komerera' , 'mau mau', 'oath administrator', 'passive wing',
+'rebels', 'suspects', 'terrorists','terrorosts','terrorist', 'gunman', 'terorist', 'gunmen', 'resistance group','resistance groups', 'oath administrater','oath administrators','passive wing members', 'resistance','suspect', 'suspected insurgents','terroist','terroists','terrost') ,
+
+'civilians'=c('civilians','africans', 'children', 'civilian', 'driver', 'employees', 'evangelist', 'family', 'farm boys', 'girls', 'informer',
+'kikuyu', 'laborour', 'loyalist', 'masai', 'men', 'mission staff', 'owner', 'passengers', 'people',  'tugen tribesmen' , 'stranger', 'sikh',
+'herd boys', 'isiolo game scouts', 'farm labour', 'farmer', 'european', 'employer', 'employee', 'civilan','shopkeeper' , 'students', 'teachers',
+'turkana', 'vigilantes', 'women', 'workers','villagers',  'labour', 'local labour', 'kikuyus', 'embu', 'tiriki houseboy', 'samburu', 'manager', 'woman',
+'vetofficer', 'mrhiggins', 'masai party','kuria tribesmen','manager of akira estates', 'kuria tribesmen','chstephen','african',
+'catholic misson staff', 'african staff', 'asian women', 'bus conductor', 'child', 'civilian(food carriers)', 'civilian(schoolmaster)', 'civilians',
+'civilion', 'committee', 'committee member',  'courier','elder','embu tractor driver', 'employees of club','engine boy','girl','golf club staff','his own hut',
+'hotel keeper','houseboy','illegal residents','indian','interpreter','kem','kikiyu', 'kikuyu assessor','kikuyu families','kikuyu houseboy','kikuyu labourer','kikyu',
+'kirua village','labour line','labour lines','labourer','labourers', 'laboures','labourline','labours','males','man','maragoli','maragoli labourer',
+'masai elders','masai tribesman','members of the thika committee', 'mna section leaders','municipal inspectors','non kikuyu employees','person',
+'prostitutes','purke masai','pwd employee','railway employees', 'school master','school teacher','sisters committee','somali','staff','strangers',
+'taxi drivers','teacher','treasurers', "headman's son","norton traill's labour","gordon's labour", 'food carriers') 
 
 
-c('kenya regiment','captain folliott’s team' , 'kr', 'kenreg', 'kenregg','kenya regiment sergeant',
-'kenya regt','keniya regiment','kenya regiment private')= 'kenya regiment';
+)
+```
 
-c('captain', 'company', 'military', 'army', 'military property', 'platoon', 'security forces',
-'security force', 'coy', 'striking force' ,'sentry',
-'military (generic)', 'non commissioned officers', 'patrol', 'sentrie', 'sgt white'
-)= 'military (generic)';
-
-c('pseudo gang', 'pseudo team', 'trojan', 'psuedo gangs', 'trojan team' , 'tracker group',
-'pseudo teams')= 'psuedo gangs';
-
-c('raf', 'bombers', 'air strike', 'harvards', 'raf lincolns','flying squard')='royal air force';
-
-c('general service unit', 'gsu' )= 'paramilitary';
-
-c('cid')='cid';
-
-c('kenya police', 'kp' , 'kp constables\\' quarters', 'kpa'
-)= 'kenya police';
-
-c('kenya police reserve', 'kpr', 'kpr officers', 'reserve police officer', 'rpo' , 
-'rpos', 'police and k.p.r')= 'kenya police reserve';
-
-c('constable', 'police', 'polce','policy party')= 'police (generic)';
-
-c('railway police' )= 'railway police';
-
-c('special branch', 'blue doctor team', 'special branch team', 'sb officers' )= 'special branch';
-
-c('githumu police', 'masai special constable', 'tribal police', 'tp' , 'tpeg',
-'african constable', 'african costable', 'african special constable', 'tribal police'
-)= 'tribal police';
-
-c('tribal police reserve', 'tpr') = 'tribal police reserve';
-
-c('manyatta', 'fishing camp', 'sublocation', 'village', 'camp' , 'villages')= 'communities';
-
-c('detainees', 'prisoner', 'prisoners'
-)= 'detainees';
-
-c('bandits', 'food foragers', 'gangs', 'gang', 'kiama kia muingi' , 'kkm', 'komerera' , 'mau mau', 'oath administrator', 'passive wing',
-'rebels', 'suspects', 'terrorists','terrorosts','terrorist', 'gunman', 'terorist', 'gunmen',
-'resistance group','resistance groups', 'oath administrater','oath administrators','passive wing members','resistance','suspect',
-'suspected insurgents','terroist','terroists','terrost') = 'suspected insurgents';
-
-c('africans', 'children', 'civilian','civilians', 'driver', 'employees', 'evangelist', 
-'family', 'farm boys', 'girls', 'informer',
-'kikuyu', 'laborour', 'loyalist', 'masai', 'men', 'mission staff', 'owner', 'passengers',
-'people',  'tugen tribesmen' , 'stranger', 'sikh',
-'herd boys', 'isiolo game scouts', 'farm labour', 'farmer', 'european', 'employer',
-'employee', 'civilan','shopkeeper' , 'students', 'teachers',
-'turkana', 'vigilantes', 'women', 'workers','villagers',  'labour', 'local labour',
-'kikuyus', 'embu', 'tiriki houseboy', 'samburu', 'manager', 'woman',
-'vetofficer', 'mrhiggins', 'masai party','kuria tribesmen','manager of akira estates',
-'kuria tribesmen','chstephen','african',
-'catholic misson staff', 'african staff', 'asian women', 'bus conductor', 'child',
-'civilian(food carriers)', 'civilian(schoolmaster)', 'civilians',
-'civilion', 'committee', 'committee member',  'courier','elder','embu tractor driver',
-'employees of club','engine boy','girl','golf club staff','his own hut',
-'hotel keeper','houseboy','illegal residents','indian','interpreter','kem','kikiyu',
-'kikuyu assessor','kikuyu families','kikuyu houseboy','kikuyu labourer','kikyu',
-'kirua village','labour line','labour lines','labourer','labourers',
-'laboures','labourline','labours','males','man','maragoli','maragoli labourer',
-'masai elders','masai tribesman','members of the thika committee',
-'mna section leaders','municipal inspectors','non kikuyu employees','person',
-'prostitutes','purke masai','pwd employee','railway employees',
-'school master','school teacher','sisters committee','somali','staff','strangers',
-'taxi drivers','teacher','treasurers',
-'headman\\'s son','norton traill\\'s labour','gordon\\'s labour', 'food carriers'
-) = 'civilians';
-
-c('')=NA
-
-"
-
+```{r}
 regex <- "\\.|patrol|[1-9]\\s*rd|[1-9]\\s*th" # with regex start trying to get more of these to automatically map instead of generating lots of hand codings
-events$initiator_clean <- events$initiator %>% stringr::str_trim() %>% gsub(regex, "", ., ignore.case =T)
+events$initiator_clean <- events$initiator %>% stringr::str_trim() %>% gsub(regex, "", ., ignore.case =T) %>% tolower()
 
 events <- events %>%
   dplyr::select(-one_of("initiator_clean_1", "initiator_clean_2", "initiator_clean_3")) %>% # separate will continue to add columns every time its run
@@ -416,10 +338,12 @@ events <- events %>%
   mutate_at(vars(starts_with("initiator_clean_")), funs(gsub(".*watch.*", "watch", ., ignore.case =T))) %>%
   mutate_at(vars(starts_with("initiator_clean_")), funs(trimws(.)))
 
-events <- events %>%
-  mutate(initiator_clean_1_agglow = car::recode(initiator_clean_1, initiator_target_master_clean)) %>%
-  mutate(initiator_clean_2_agglow = car::recode(initiator_clean_2, initiator_target_master_clean)) %>%
-  mutate(initiator_clean_3_agglow = car::recode(initiator_clean_3, initiator_target_master_clean))
+events <- events %>% 
+          mutate(initiator_clean_1_agglow = do.call(forcats::fct_collapse, c(list(events$initiator_clean_1), initiator_target_master_clean)) %>% as.character() ) %>%
+          mutate(initiator_clean_2_agglow = do.call(forcats::fct_collapse, c(list(events$initiator_clean_2), initiator_target_master_clean)) %>% as.character()) %>%
+          mutate(initiator_clean_3_agglow = do.call(forcats::fct_collapse, c(list(events$initiator_clean_3), initiator_target_master_clean)) %>% as.character())
+
+#https://community.rstudio.com/t/using-list-argument-with-fct-collapse/6552/7
 
 # sort(table(events$initiator_clean_1_agglow))
 
@@ -431,8 +355,10 @@ lowlevelagg <- c(
   "railway police", "home guard", "colonial authorities", "suspected insurgents"
 )
 
-# events <- events %>%
-# mutate(initiator_clean_1_agglow=ifelse(initiator_clean_1_agglow  %in% lowlevelagg & !is.na(initiator_clean_1_agglow),initiator_clean_1_agglow, "uncategorized")) %>% mutate(initiator_clean_2_agglow=ifelse(initiator_clean_2_agglow  %in% lowlevelagg & !is.na(initiator_clean_2_agglow),initiator_clean_2_agglow, "uncategorized")) %>% mutate(initiator_clean_3_agglow=ifelse(initiator_clean_3_agglow  %in% lowlevelagg & !is.na(initiator_clean_3_agglow),initiator_clean_3_agglow, "uncategorized"))
+#events <- events %>%
+#  mutate(initiator_clean_1_agglow=ifelse(initiator_clean_1_agglow  %in% lowlevelagg & !is.na(initiator_clean_1_agglow),initiator_clean_1_agglow, "uncategorized")) %>%
+#  mutate(initiator_clean_2_agglow=ifelse(initiator_clean_2_agglow  %in% lowlevelagg & !is.na(initiator_clean_2_agglow),initiator_clean_2_agglow, "uncategorized")) %>%  
+#  mutate(initiator_clean_3_agglow=ifelse(initiator_clean_3_agglow  %in% lowlevelagg & !is.na(initiator_clean_3_agglow),initiator_clean_3_agglow, "uncategorized"))
 
 # table(events$initiator_clean_1_agglow, useNA="always")
 ```
@@ -444,13 +370,11 @@ events[, c("initiator_clean_1_aggmed", "initiator_clean_2_aggmed", "initiator_cl
 events <- events %>%
   mutate_at(
     vars(starts_with("initiator_clean_1_aggmed|initiator_clean_2_aggmed|initiator_clean_3_aggmed")),
-    .funs = funs(car::recode("
-     c('cid','kenya police reserve','kenya police','police (generic)','railway police','special branch',
-'tribal police','tribal police reserve') = 'police';
-     c('arab combat units','asian combat units','british military','Kings African Rifles',
-'kenya regiment','military (generic)','psuedo gangs','royal air force') = 'military'; 
-     c('colonial authorities', 'tribal authorities')='civil authorities'
-          "))
+    .funs = funs(forcats::fct_collapse(
+     'police'=c('cid','kenya police reserve','kenya police','police (generic)','railway police','special branch','tribal police','tribal police reserve') ,
+     'military'=c('arab combat units','asian combat units','british military','kings african rifles','kenya regiment','military (generic)','psuedo gangs','royal air force') , 
+     'civil authorities'=c('colonial authorities', 'tribal authorities')
+     ))
   )
 
 events$initiator_clean_2_aggmed %>%
@@ -465,10 +389,10 @@ events[, c("initiator_clean_1_agghigh", "initiator_clean_2_agghigh", "initiator_
 events <- events %>%
   mutate_at(
     vars(starts_with("initiator_clean_1_agghigh|initiator_clean_2_agghigh|initiator_clean_3_agghigh")),
-    .funs = funs(car::recode("
-                  c('civil authorities', 'home guard', 'military', 'police', 'paramilitary') ='government';
-                  c('suspected insurgents') ='rebels';
-          "))
+    .funs = funs(forcats::fct_collapse(
+                  'government'=c('civil authorities', 'home guard', 'military', 'police', 'paramilitary') ,
+                  'rebels'=c('suspected insurgents') 
+          ))
   )
 
 events$initiator_clean_3_agghigh %>%
@@ -508,10 +432,11 @@ events$target_clean_1 %>%
 ```
 
 ```{r}
-events <- events %>%
-  mutate(target_clean_1_agglow = car::recode(target_clean_1, initiator_target_master_clean)) %>%
-  mutate(target_clean_2_agglow = car::recode(target_clean_2, initiator_target_master_clean)) %>%
-  mutate(target_clean_3_agglow = car::recode(target_clean_3, initiator_target_master_clean))
+
+events <- events %>% 
+          mutate(target_clean_1_agglow = do.call(forcats::fct_collapse, c(list(events$target_clean_1), initiator_target_master_clean)) %>% as.character() ) %>%
+          mutate(target_clean_2_agglow = do.call(forcats::fct_collapse, c(list(events$target_clean_2), initiator_target_master_clean)) %>% as.character()) %>%
+          mutate(target_clean_3_agglow = do.call(forcats::fct_collapse, c(list(events$target_clean_3), initiator_target_master_clean)) %>% as.character())
 
 lowlevelagg <- c(
   "church", "kenya police", "medicine", "tribal police reserve", "detainees", "kenya regiment", "other weapons",
@@ -520,9 +445,10 @@ lowlevelagg <- c(
   "home guard", "civilians", "livestock", "suspected insurgents"
 )
 
-events <- events %>%
-   mutate(target_clean_1_agglow=ifelse(target_clean_1_agglow  %in% lowlevelagg & !is.na(target_clean_1_agglow),target_clean_1_agglow, "uncategorized")) %>%
-   mutate(target_clean_2_agglow=ifelse(target_clean_2_agglow  %in% lowlevelagg & !is.na(target_clean_2_agglow),target_clean_2_agglow, "uncategorized")) %>%    mutate(target_clean_3_agglow=ifelse(target_clean_3_agglow  %in% lowlevelagg & !is.na(target_clean_3_agglow),target_clean_3_agglow, "uncategorized"))
+#events <- events %>%
+#   mutate(target_clean_1_agglow=ifelse(target_clean_1_agglow  %in% lowlevelagg & !is.na(target_clean_1_agglow),target_clean_1_agglow, "uncategorized")) %>%
+#   mutate(target_clean_2_agglow=ifelse(target_clean_2_agglow  %in% lowlevelagg & !is.na(target_clean_2_agglow),target_clean_2_agglow, "uncategorized")) %>% 
+#   mutate(target_clean_3_agglow=ifelse(target_clean_3_agglow  %in% lowlevelagg & !is.na(target_clean_3_agglow),target_clean_3_agglow, "uncategorized"))
 
 events$target_clean_1_agglow %>%
   janitor::tabyl(sort = TRUE) %>%
@@ -537,16 +463,14 @@ events[, c("target_clean_1_aggmed", "target_clean_2_aggmed", "target_clean_3_agg
 events <- events %>%
   mutate_at(
     vars(starts_with("initiator_clean_1_aggmed|initiator_clean_2_aggmed|initiator_clean_3_aggmed")),
-    .funs = funs(car::recode(temp, "
-     c('cid','kenya police reserve','kenya police','police (generic)','railway police',
-'special branch','tribal police','tribal police reserve') = 'police';
-     c('arab combat units','asian combat units','british military','Kings African Rifles',
-'kenya regiment','military (generic)','psuedo gangs','royal air force') = 'military';
-     c('colonial authorities', 'tribal authorities')='civil authorities';
-     c('ammunition','firearms','other weapons')='armaments';
-     c('cash','food','livestock','medicine','supplies')='provisions';
-     c('church','school','infrastructure')='public buildings';
-          "))
+    .funs = funs(forcats::fct_collapse(temp,
+     'police'=c('cid','kenya police reserve','kenya police','police (generic)','railway police','special branch','tribal police','tribal police reserve') ,
+     'military'=c('arab combat units','asian combat units','british military','Kings African Rifles','kenya regiment','military (generic)','psuedo gangs','royal air force'), 
+     'civil authorities'=c('colonial authorities', 'tribal authorities'),
+     'armaments'=c('ammunition','firearms','other weapons'),
+     'provisions'=c('cash','food','livestock','medicine','supplies'),
+     'public buildings'=c('church','school','infrastructure') 
+     ))
   )
 
 events$initiator_clean_1_aggmed %>%
@@ -561,12 +485,12 @@ events[, c("target_clean_1_agghigh", "target_clean_2_agghigh", "target_clean_3_a
 events <- events %>%
   mutate_at(
     vars(starts_with("target_clean_1_agghigh|target_clean_2_agghigh|target_clean_3_agghigh")),
-    .funs = funs(car::recode("
-                  c('civil authorities', 'home guard', 'military', 'police', 'paramilitary') ='government';
-                  c('suspected insurgents','detainees') ='rebels';
-                  c('armaments','private property','provisions','public buildings') ='property';
-                  c('communities','communities')='civilians';
-          "))
+    .funs = funs(forcats::fct_collapse(
+                  'government'=c('civil authorities', 'home guard', 'military', 'police', 'paramilitary') ,
+                  'rebels'=c('suspected insurgents','detainees') ,
+                  'property'=c('armaments','private property','provisions','public buildings') ,
+                  'civilians'=c('communities','communities')
+          ))
   )
 
 events$target_clean_1_agghigh %>%
@@ -922,19 +846,24 @@ events <- events %>% mutate_at(
     "rebels_killed_clean", "rebels_wounded_clean", "rebels_captured_clean",
     "civilians_killed_clean", "civilians_wounded_clean", "civilians_captured_clean"
   ),
-  funs(as.numeric(car::recode(., " 'Few'='2';'Many'='3';'others'='2';'Sevaral'='3';
-                                  'several'='3'; 'Several More'='3'; 'Several others'='3';
-                                   'Some'='3';
-                                   '100+'='100'; '23 Families'='23'; '28 families'='28'; '30-40'='35';
-                                   '50+'='50'; 'Council of elders'='3';
-                                  'Council of war'='3'; 'Few'='2'; 'some'='2'; 
-                                   'Several'='3';  '4500'='45'; '800'='80'; 'Gang'='3'; 'Majority'='3'; 
-                                 ; 'many'='3'  ; 'Several'='3' ; 'Small gang'='3' ;
-                                  '6+'='6' ; '10+'='10' ; '3+'='3';
-                                 'unKnown'='1'; 'unknown'='1'; 'UnKnown'='1';  'UNKNOWN'='1'; 'Unkown'='1';
-                                 'Unknown'='1' ; 'Number'='1';'More'='1'; '10197'='' ; '101'='1' ;
-'48'='7' ; '146'='1' ; '122'='1';  '208'='1'; '94'='1' ;
-                                 NA=0")))
+  funs(as.numeric(forcats::fct_collapse(.,
+                                  '1'=c('unKnown','unknown','UnKnown','UNKNOWN','Unkown','Unknown','Number','More','101','146','122','208','94'),
+                                  '2'=c('Few','others','Few','some'),
+                                  '3'=c('Many','Sevaral','several','Several More','Several others','Some','Council of elders','Council of war','Several','Majority','many','Gang','Several','Small gang','3+'),
+                                  '100'='100+',
+                                  '23'='23 Families',
+                                  '28'='28 families',
+                                  '35'='30-40',
+                                  '50'='50+',
+                                  '45'='4500', 
+                                  '80'='800', 
+                                  '6'='6+' , 
+                                  '10'='10+' ,
+                                  '10197'=NA,
+                                  '7'='48') %>%
+                    fct_explicit_na(na_level='0')
+                  )
+       )
 )
 
 events <- events %>% mutate_at(.vars = c(
@@ -949,6 +878,7 @@ events <- events %>%
   mutate(rebels_government_killedwounded_clean = rebels_killed_clean + rebels_wounded_clean) %>%
   mutate(rebels_government_killed_clean = rebels_killed_clean + government_killed_clean) %>%
   mutate(rebels_government_civilians_killed_clean = rebels_killed_clean + government_killed_clean + civilians_killed_clean)
+
 ```
 
 ```{r Collapse Event Types,cache=T}
@@ -1087,24 +1017,18 @@ plot(events$map_coordinate_clean_longitude,events$map_coordinate_clean_latitude)
 cat("\014")
 
 #clean document district
-#p_load(car,stringi,xtable)
+events$document_district_clean <- events$document_district %>% stringi::stri_trans_totitle() %>% stringr::str_trim() %>% as.factor()
 
-events$document_district_clean <- stringr::str_trim(stringi::stri_trans_totitle(events$document_district))
-
-events$document_district_clean <- events$document_district_clean %>% car::recode(" 
-                                   'Embu-Fort Hall Border'='Embu';
-                                  'BARINGO'='Baringo';
-                                   'FORT HALL'='Fort Hall'; 
-                                   'Naviasha'='Naivasha';
-                                   'Nyeri Settled Area'='Nyeri';
-                                  'South Nyeri Reserve'='Nyeri' ;
-                                   'Reference Serial'=NA ;
-                                  'H/M'=NA; 'Matathia'=NA;  
-                                   'Kitui'=NA; 
-                                  'Jock Scott'='Nairobi';
-                                   ''=NA; 
-                                   ' '=NA ;
-                                   'Document District' = NA")
+events$document_district_clean <- events$document_district_clean %>% forcats::fct_collapse( 
+                                   'Embu'=c('Embu-Fort Hall Border'),
+                                   'Baringo'=c('BARINGO'),
+                                   'FORT HALL'=c('Fort Hall'),
+                                   'Naivasha'=c('Naviasha'),
+                                   'Nyeri' = c('Nyeri Settled Area'),
+                                   'Nyeri' = c('South Nyeri Reserve') ,
+                                   'Nairobi' = c('Jock Scott'),
+                                   NULL=c('',' ' ,'Document District','Kitui','Matathia', 'H/M','Reference Serial')
+)
 
 
 events$document_unit_type <- NA
@@ -1151,7 +1075,7 @@ events$document_district_clean  %>%
 
 events$location_text_ruleclean <- events$location_text %>% stringr::str_trim() %>% tolower()
 events <- events %>% 
-         dplyr::select(-one_of("location_text_ruleclean_connector_prefix","location_text_ruleclean_connector_suffix")) %>%  
+          dplyr::select(-one_of("location_text_ruleclean_connector_prefix","location_text_ruleclean_connector_suffix")) %>%  #this intentionally throws a warning
           tidyr ::separate(col=location_text_ruleclean,
                     into=c("location_text_ruleclean_connector_prefix","location_text_ruleclean_connector_suffix"),
                     sep = " of | near ", remove=F, extra="drop", fill="right")

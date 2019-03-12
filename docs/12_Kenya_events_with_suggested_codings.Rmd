@@ -1,0 +1,40 @@
+---
+title: "Kenya Data and Suggested Codings"
+output: html_notebook
+---
+
+
+```{r}
+
+georef_all_dt <- readRDS(system.file("extdata", "georef_all_dt_recomendations.Rds", package = "MeasuringLandscape")) 
+events_sf <- readRDS( glue::glue(getwd(), "/../inst/extdata/events_sf.Rdata"))
+
+events_sf_geocoded <- events_sf %>% left_join(georef_all_dt %>% arrange(rule_ensemble) %>% filter(!duplicated(event_hash) ) )
+
+```
+
+How many coordinates are recovered?
+
+```{r}
+table(is.na(events_sf_geocoded$rule_ensemble))
+```
+
+```{r, fig.width=15, fig.height=10}
+plot(events_sf_geocoded$X1, events_sf_geocoded$Y1) #plotting using the lat long columns
+```
+
+```{r, fig.width=15, fig.height=10}
+ggplot(events_sf_geocoded) + geom_sf() #plotting using the geom column
+```
+
+
+```{r, fig.width=15, fig.height=10}
+ggplot(events_sf_geocoded) + geom_sf(aes(colour=document_district)) #plotting using the geom column
+```
+
+
+```{r}
+
+saveRDS(events_sf_geocoded, glue::glue(getwd(), "/../inst/extdata/events_sf_geocoded.Rdata"))
+
+```

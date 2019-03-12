@@ -25,7 +25,7 @@ This file develops Stage 2 of the fuzzy toponym matcher. Its job is to refine th
 ```{r, results='hide', message=FALSE, warning=FALSE }
 rm(list=ls()); gc()
 library(MeasuringLandscape)
-
+library(tidyverse)
 dir_figures <- glue::glue(getwd(), "/../paper/figures/")
 
 knitr::opts_knit$set(progress = TRUE, verbose = TRUE)
@@ -39,13 +39,11 @@ It is based on an events dataset built and cleaned in the file "01 Prep Events C
 ```{r}
 
 #Load Events
-events_sf <- readRDS(system.file("extdata", "events_sf.Rdata", package = "MeasuringLandscape")) %>% distinct() 
-events_dt <- as.data.table(events_sf)
+events_sf <- readRDS(system.file("extdata", "events_sf.Rdata", package = "MeasuringLandscape")) 
+events_dt <- data.table::as.data.table(events_sf) #%>% unique() 
 dim(events_sf)
 
 unlist(strsplit(events_sf$name_cleaner,"")) %>% janitor::tabyl() %>% janitor::adorn_crosstab(., denom = "col", show_n = T, digits = 1, show_totals = T)
-
-
 
 events_sf_text_coord_unique <- plyr::ddply(events_sf[,c('location_text','name_clean','name_cleaner','document_district_clean',
                                                   'map_coordinate_clean_latitude','map_coordinate_clean_longitude')],
@@ -56,8 +54,8 @@ events_sf_text_coord_unique <- plyr::ddply(events_sf[,c('location_text','name_cl
 #Load Gazeteers
 flatfiles_sf_roi <- readRDS(system.file("extdata", "flatfiles_sf_roi.Rdata", package = "MeasuringLandscape")) 
 dim(flatfiles_sf_roi)
-flatfiles_dt <- as.data.table(flatfiles_sf_roi)
-setkey(flatfiles_dt,place_hash)
+flatfiles_dt <- data.table::as.data.table(flatfiles_sf_roi)
+data.table::setkey(flatfiles_dt,place_hash)
 
 
 ```
@@ -79,7 +77,7 @@ This takes every event with a coordinate and looks up the 10 nearest points in t
 ```{r}
 
 #Should only need to do this once
-#create_toponym_dataset_forlabeling()
+#MeasuringLandscape:::create_toponym_dataset_forlabeling()
 
 ```
 
@@ -235,7 +233,7 @@ table(toponym_training_dataset$xy_test$rex_match)
 
 ```{r}
 
-require(xgboost)
+
 require(methods)
 global_test <- toponym_training_dataset[['xy_all']] %>% filter(test %in% T  & !is.na(rex_match) )
 
@@ -293,7 +291,7 @@ xgb.save(toponym_xb_string_and_stem,
 
 (Appendix Figure 5, AUC and Precision Recall curves for toponym fuzzy matcher stage 2, predicting likelihood of a match.)
 
-```{r}
+```{r, fig.width=12, fig.height=8}
 
 dtest<-xgb.DMatrix(data= as.matrix(as.data.frame(global_test)[,vars_x_everything]),
                    label=as.numeric(global_test$rex_match),
@@ -303,8 +301,8 @@ dtest<-xgb.DMatrix(data= as.matrix(as.data.frame(global_test)[,vars_x_everything
 global_test$toponym_xb_everything2 <- predict(toponym_xb_everything2, dtest )
 global_test$toponym_xb_everything2 <- 1/(1 + exp(-global_test$toponym_xb_everything2))
 
-global_test$toponym_xb_onlystring <- predict(toponym_xb_onlystring, dtest )
-global_test$toponym_xb_onlystring <- 1/(1 + exp(-global_test$toponym_xb_onlystring))
+#global_test$toponym_xb_onlystring <- predict(toponym_xb_onlystring, dtest )
+#global_test$toponym_xb_onlystring <- 1/(1 + exp(-global_test$toponym_xb_onlystring))
 
 
 global_test$toponym_xb_string_and_stem <- predict(toponym_xb_string_and_stem, dtest )
@@ -389,7 +387,7 @@ Evaluate the model
 (Appendix Figure 6, AUC and Precision Recall curves for toponym fuzzy matcher stage 2, predicting likelihood of a match.)
 
 
-```{r}
+```{r, fig.width=12, fig.height=8}
 #p_load(DiagrammeR)
 #xgb.plot.tree(model = xb)
 #xgb.plot.tree(model = toponym_xb_everything2, trees = 0, show_node_id = TRUE, render = TRUE)

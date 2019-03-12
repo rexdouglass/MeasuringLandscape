@@ -22,6 +22,7 @@ This file demonstrates that the kinds of locations that are imputed are differen
 rm(list=ls()); gc()
 # !diagnostics off
 library(MeasuringLandscape)
+library(tidyverse)
 
 dir_figures <- glue::glue(getwd(), "/../paper/figures/")
 
@@ -136,14 +137,13 @@ georef_all_dt_covariates_events_sf$roads_distance <- MeasuringLandscape:::new_ov
 
 # Plot the differences of points at real locations versus their imputed counterparts
 
-```{r}
+```{r, fig.width=12, fig.height=8}
 
-#p_load(Hmisc)
-sentence_case <- function(x) Hmisc::capitalize(tolower(gsub("_"," ",x)))
+sentence_case <- function(x) stringr::str_to_sentence(tolower(gsub("_"," ",x)))
 
 
 #Make that bias in the coef plot
-setkey(georef_all_dt, "rule_ensemble") #sort by ensemble score, pick the best option for each source
+data.table::setkey(georef_all_dt, "rule_ensemble") #sort by ensemble score, pick the best option for each source
 georef_all_dt_source <- georef_all_dt[,.SD[1], by=list(event_hash,
                                                        source_dataset) ]
 

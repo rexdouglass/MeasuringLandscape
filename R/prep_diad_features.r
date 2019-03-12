@@ -4,10 +4,10 @@
 # This function takes in a dataframe with two strings, a and b, and then calculates string distance features on them.
 
 toponym_add_distances_dt <- function(dt, fromscratch=F, nthread=parallel::detectCores()) {
-  dt <- as.data.table(dt)
+  dt <- data.table::as.data.table(dt)
 
   print("1 of 24")
-  dt[, First_Mistmatch := firstmismatch(a, b, verbose = F)]
+  dt[, First_Mistmatch := MeasuringLandscape:::firstmismatch(a, b, verbose = F)]
   print("2 of 24")
   dt[, Jaro := stringdist::stringsim(a, b, "jw", nthread = nthread), ]
   print("3 of 24")
@@ -59,14 +59,6 @@ toponym_add_distances_dt <- function(dt, fromscratch=F, nthread=parallel::detect
   print("24 of 24")
   dt[, dJaccard := stringdist::stringdist(a, b, "jaccard", nthread = nthread), ]
 
-
-  return(dt)
-}
-
-toponym_add_features <- function(dt, fromscratch=F) {
-  dt <- as.data.table(dt)
-  dt <- MeasuringLandscape:::toponym_add_distances_dt(dt)
-  # data <- toponym_add_corpus(data) #Currently excluded from paper
 
   return(dt)
 }

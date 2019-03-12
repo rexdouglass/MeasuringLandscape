@@ -71,18 +71,18 @@ load_wikidata <- function(long_min, long_max, lat_min, lat_max, fromscratch=F) {
           })
         }
       }
-      wikidata <- rbindlist(wikidata_list, fill = T)[, c(
+      wikidata <- data.table::rbindlist(wikidata_list, fill = T)[, c(
         "id", "type", "wikidata_name_first", "wikidata_name", "mainsnak.property_text",
         "wikidata_description_first", "wikidata_description", "wikidata_name2_first", "wikidata_name2",
         "mainsnak.datavalue.value.latitude", "mainsnak.datavalue.value.longitude"
       ), with = F]
 
       # Which we process and extract only those with latitudes and longitudes
-      fwrite(wikidata, file = "/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/wikidata_coordinates.csv")
+      data.table::fwrite(wikidata, file = "/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/wikidata_coordinates.csv")
     }
 
     # An extract I've made available which only has wikidata entries with latitude and longitude coordinates
-    wikidata <- fread("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/wikidata_coordinates.csv")
+    wikidata <- data.table::fread("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/wikidata_coordinates.csv")
 
     # We further reduce this to just points in our region of interest
     wikidata_roi <- subset(wikidata, mainsnak.datavalue.value.latitude > lat_min &
@@ -92,10 +92,10 @@ load_wikidata <- function(long_min, long_max, lat_min, lat_max, fromscratch=F) {
     dim(wikidata_roi)
 
     # Save an extract in the package directory, available for publishing
-    fwrite(wikidata_roi, glue(dir_package_files, "wikidata_roi.csv"))
+    data.table::fwrite(wikidata_roi,glue::glue(dir_package_files, "wikidata_roi.csv"))
   }
 
-  wikidata_roi <- fread(system.file("extdata/", "wikidata_roi.csv", package = "MeasuringLandscape"))
+  wikidata_roi <- data.table::fread(system.file("extdata/", "wikidata_roi.csv", package = "MeasuringLandscape"))
 
   wikinames <- strsplit(x = paste(wikidata_roi$wikidata_name_first, wikidata_roi$wikidata_name, wikidata_roi$wikidata_name2_first, wikidata_roi$wikidata_name2, sep = ";"), split = ";")
   wikinames_en <- sapply(wikinames, FUN = function(x) unique(x[grepl("en_", x)]))
@@ -152,7 +152,7 @@ load_tgn <- function(long_min, long_max, lat_min, lat_max, fromscratch=F) {
     dim(getty_tgn_wide_kenya)
 
     # Lat Longs are in a seperate file so go clean that up and merge on it
-    getty_geometry_wide <- read.fst("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/getty_geometry_wide.fst", as.data.table = T)
+    getty_geometry_wide <- data.table::read.fst("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/getty_geometry_wide.fst", as.data.table = T)
     dim(getty_geometry_wide) # 2,505,494      71
 
     names(getty_geometry_wide) <- gsub(" <http://schema.org/", "", names(getty_geometry_wide), fixed = T)
@@ -177,11 +177,11 @@ load_tgn <- function(long_min, long_max, lat_min, lat_max, fromscratch=F) {
 
     fwrite(
       tgn_kenya,
-      file = glue(dir_package_files, "tgn_kenya.csv")
+      file =glue::glue(dir_package_files, "tgn_kenya.csv")
     )
   }
 
-  tgn_sf <- fread(system.file("extdata", "tgn_kenya.csv", package = "MeasuringLandscape")) %>%
+  tgn_sf <-data.table::fread(system.file("extdata", "tgn_kenya.csv", package = "MeasuringLandscape")) %>%
     dplyr::mutate(name_alternates = paste(prefLabel, altLabel, sep = ";")) %>%
     dplyr::mutate(location_text = paste(prefLabel, altLabel, sep = ";")) %>%
     dplyr::select("location_text", "latitude", "longitude", "name_alternates") %>%
@@ -214,8 +214,8 @@ load_historical <- function(roi, fromscratch=F) {
       sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326, agr = "constant", remove = F)
 
     saveRDS(
-      historical_sf %>% subset_roi(roi),
-      file = glue(dir_package_files, "historical_sf_roi.Rdata")
+      historical_sf %>% MeasuringLandscape::subset_roi(roi),
+      file =glue::glue(dir_package_files, "historical_sf_roi.Rdata")
     )
   }
 
@@ -260,8 +260,8 @@ load_geonames <- function(roi, fromscratch=F) {
       sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326, agr = "constant", remove = F)
 
     saveRDS(
-      geonames_sf %>% subset_roi(roi),
-      file = glue(dir_package_files, "geonames_sf_roi.Rdata")
+      geonames_sf %>% MeasuringLandscape::subset_roi(roi),
+      file =glue::glue(dir_package_files, "geonames_sf_roi.Rdata")
     )
   }
 
@@ -282,7 +282,7 @@ load_nga <- function(roi, fromscratch=F) {
       sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326, agr = "constant", remove = F)
 
     saveRDS(
-      nga_sf %>% subset_roi(roi),
+      nga_sf %>% MeasuringLandscape::subset_roi(roi),
       file=glue(dir_package_files, "nga_sf_roi.Rdata")
     )
   }
@@ -306,8 +306,8 @@ load_googlemaps <- function(roi, fromscratch=F) {
       mutate(timeperiod = "2017-01-01")
 
     saveRDS(
-      googlemaps_sf %>% subset_roi(roi),
-      file = glue(dir_package_files, "googlemaps_sf_roi.Rdata")
+      googlemaps_sf %>% MeasuringLandscape::subset_roi(roi),
+      file =glue::glue(dir_package_files, "googlemaps_sf_roi.Rdata")
     )
   }
 
@@ -330,8 +330,8 @@ load_bingmaps <- function(roi, fromscratch=F) {
       mutate(timeperiod = "2017-01-01")
 
     saveRDS(
-      bingmaps_sf %>% subset_roi(roi),
-      file = glue(dir_package_files, "bingmaps_sf_roi.Rdata")
+      bingmaps_sf %>% MeasuringLandscape::subset_roi(roi),
+      file =glue::glue(dir_package_files, "bingmaps_sf_roi.Rdata")
     )
   }
 
@@ -413,8 +413,8 @@ load_ken_adm <- function(roi, fromscratch=F) {
       mutate(timeperiod = "2017-01-01")
 
     saveRDS(
-      KEN_adm_sf %>% subset_roi(roi),
-      file = glue(dir_package_files, "KEN_adm_sf_roi.Rdata")
+      KEN_adm_sf %>% MeasuringLandscape::subset_roi(roi),
+      file =glue::glue(dir_package_files, "KEN_adm_sf_roi.Rdata")
     )
   }
 
@@ -435,21 +435,21 @@ load_openstreetmap <- function(roi, fromscratch=F) {
     )
 
     for (filename in filenames) {
-      openstreetmap_list[[filename]] <- sf::st_read(glue("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/", filename))
+      openstreetmap_list[[filename]] <- sf::st_read(glue::glue("/home/skynet2/Dropbox (rex)/Kenya Article Drafts/Violent Events/data/openstreetmap/", filename))
     }
 
     openstreetmap_sf <- openstreetmap_list %>%
-      reduce(rbind_sf) %>%
+      reduce(MeasuringLandscape:::rbind_sf) %>%
       mutate(timeperiod = "2017-01-01")
 
     saveRDS(
-      openstreetmap_sf %>% subset_roi(roi),
-      file = glue(dir_package_files, "openstreetmap_sf_roi.Rdata")
+      openstreetmap_sf %>% MeasuringLandscape:::subset_roi(roi),
+      file =glue::glue(dir_package_files, "openstreetmap_sf_roi.Rdata")
     )
   }
 
   openstreetmap_sf_roi <- readRDS(system.file("extdata", "openstreetmap_sf_roi.Rdata", package = "MeasuringLandscape")) %>%
-    common_cleaning() %>%
+    #MeasuringLandscape:::common_cleaning() %>%
     select(c("fclass", "name", "geometry")) %>%
     setNames(c("feature_code", "name", "geometry")) %>%
     mutate(source_dataset = "openstreetmap") %>%
@@ -479,9 +479,9 @@ load_kenya_cadastral <- function(roi, fromscratch=F) {
       mutate(timeperiod = "1950")
 
     kenya_cadastral_sf %>% 
-      subset_roi(roi) %>% 
+      MeasuringLandscape::subset_roi(roi) %>% 
       saveRDS(
-        file = glue(dir_package_files, "kenya_cadastral_roi.Rdata")
+        file =glue::glue(dir_package_files, "kenya_cadastral_roi.Rdata")
         )
   }
 
@@ -503,13 +503,13 @@ load_kenya_cadastral_district <- function(roi, fromscratch=F) {
       mutate(feature_code = "district")
   
     kenya_cadastral_district_sf %>% 
-      subset_roi(roi) %>% 
+      MeasuringLandscape::subset_roi(roi) %>% 
       sf::st_write("/home/rexdouglass/Dropbox (rex)/Kenya Article Drafts/MeasuringLandscapeCivilWar_TooBig/kenya_cadastral_district.gpkg", delete_layer = T)
     
     kenya_cadastral_district_sf %>% 
-      subset_roi(roi) %>% 
+      MeasuringLandscape::subset_roi(roi) %>% 
       saveRDS(
-        file = glue(dir_package_files, "kenya_cadastral_district_roi.Rdata")
+        file =glue::glue(dir_package_files, "kenya_cadastral_district_roi.Rdata")
         )  
 
   }
@@ -529,9 +529,9 @@ load_kenya_districts1962 <- function(roi, fromscratch=F) {
       mutate(feature_code = "district")
 
     kenya_districts1962_sf %>% 
-      subset_roi(roi) %>% 
+      MeasuringLandscape::subset_roi(roi) %>% 
       saveRDS(
-        glue(dir_package_files, "kenya_districts1962_roi.Rdata")
+       glue::glue(dir_package_files, "kenya_districts1962_roi.Rdata")
         )
   }
 
@@ -577,8 +577,8 @@ load_livestock <- function(roi, fromscratch=F) {
 
     saveRDS(
       livestock_sf %>% 
-      subset_roi(roi),
-      glue(dir_package_files, "livestock_sf_roi.Rdata")
+      MeasuringLandscape::subset_roi(roi),
+     glue::glue(dir_package_files, "livestock_sf_roi.Rdata")
     )
   }
 
