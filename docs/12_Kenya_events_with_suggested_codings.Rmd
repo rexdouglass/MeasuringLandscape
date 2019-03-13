@@ -5,11 +5,13 @@ output: html_notebook
 
 
 ```{r}
+library(MeasuringLandscape)
+library(tidyverse)
 
 georef_all_dt <- readRDS(system.file("extdata", "georef_all_dt_recomendations.Rds", package = "MeasuringLandscape")) 
 events_sf <- readRDS( glue::glue(getwd(), "/../inst/extdata/events_sf.Rdata"))
 
-events_sf_geocoded <- events_sf %>% left_join(georef_all_dt %>% arrange(rule_ensemble) %>% filter(!duplicated(event_hash) ) )
+events_sf_geocoded <- events_sf %>% left_join(georef_all_dt %>% arrange(rule_ensemble) %>% filter(!duplicated(event_hash) ), by="event_hash" )
 
 ```
 
